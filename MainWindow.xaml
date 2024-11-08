@@ -4,19 +4,36 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PMS"
+        xmlns:pms-components="clr-namespace:PMS.Components"
         mc:Ignorable="d"
-        Title="Patient Record System" Height="720" Width="1000">
+        Title="{Binding Source={x:Static local:AppConstants.AppComputedTitle}}" Height="720" Width="1000" MinHeight="200" MinWidth="600">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="48"/>
             <RowDefinition Height="28"/>
             <RowDefinition/>
+            <RowDefinition Height="24"/>
         </Grid.RowDefinitions>
-        <WebBrowser Name="ContentFrame" Grid.Row="2" Source="https://google.com" Grid.RowSpan="2"/>
+
         <Grid Grid.Row="0" Background="#FF052C49">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
             <TextBlock 
                 VerticalAlignment="Center"
                 Text="Home" Foreground="White" Margin="16,0,16,0" FontSize="16" />
+            
+            <Grid Margin="16,0,16,0" HorizontalAlignment="Right">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <pms-components:PMSHeaderUser Grid.Column="0" Margin="0,0,12,0" />
+                <pms-components:PMSHeaderClock Grid.Column="1" />
+            </Grid>
         </Grid>
         <Grid Grid.Row="1" Background="#031827">
             <Grid.ColumnDefinitions>
@@ -28,17 +45,60 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button BorderBrush="{x:Null}" Background="#FF052C49" HorizontalAlignment="Left" Content="Overview" Padding="16,0,16,0" Foreground="White" Grid.Column="1" Click="OnTabSelect" />
-            <Button BorderBrush="{x:Null}" Background="#FF052C49" HorizontalAlignment="Left" Content="Patients" Padding="16,0,16,0" Foreground="White" Grid.Column="2" Click="OnTabSelect" />
-            <Button BorderBrush="{x:Null}" Background="#FF052C49" HorizontalAlignment="Stretch" Content="Reporting" Padding="16,0,16,0" Foreground="White" Grid.Column="3" Click="OnTabSelect" />
-            <Button BorderBrush="{x:Null}" Background="#FF052C49" HorizontalAlignment="Stretch" Content="Dispensing" Padding="16,0,16,0" Foreground="White" Grid.Column="4" Click="OnTabSelect"  />
-            <Button BorderBrush="{x:Null}" Background="#FF052C49" HorizontalAlignment="Stretch" Content="Referrals" Padding="16,0,16,0" Foreground="White" Grid.Column="5" Click="OnTabSelect" />
-            <Button BorderBrush="{x:Null}" Background="#FF052C49" HorizontalAlignment="Stretch" Content="Registration" Padding="16,0,16,0" Foreground="White" Grid.Column="6" Click="OnTabSelect" />
-            <Grid/>
+            <Button Name="WindowTab_Overview" HorizontalAlignment="Left" Content="Overview" Padding="16,0,16,0" Foreground="White" Grid.Column="1" Click="OnTabSelect" BorderThickness="0,0,0,3">
+                <Button.Background>
+                    <SolidColorBrush Color="#FF052C49" Opacity="0"/>
+                </Button.Background>
+                <Button.BorderBrush>
+                    <SolidColorBrush Color="#FF31A8FF" Opacity="0"/>
+                </Button.BorderBrush>
+            </Button>
+            <Button Name="WindowTab_Patients" HorizontalAlignment="Left" Content="Patients" Padding="16,0,16,0" Foreground="White" Grid.Column="2" Click="OnTabSelect" BorderThickness="0,0,0,3">
+                <Button.Background>
+                    <SolidColorBrush Color="#FF052C49" Opacity="0"/>
+                </Button.Background>
+                <Button.BorderBrush>
+                    <SolidColorBrush Color="#FF31A8FF" Opacity="0"/>
+                </Button.BorderBrush>
+            </Button>
+            <Button Name="WindowTab_Reporting" HorizontalAlignment="Stretch" Content="Reporting" Padding="16,0,16,0" Foreground="White" Grid.Column="3" Click="OnTabSelect" BorderThickness="0,0,0,3">
+                <Button.Background>
+                    <SolidColorBrush Color="#FF052C49" Opacity="0"/>
+                </Button.Background>
+                <Button.BorderBrush>
+                    <SolidColorBrush Color="#FF31A8FF" Opacity="0"/>
+                </Button.BorderBrush>
+            </Button>
+            <Button Name="WindowTab_Dispensing" HorizontalAlignment="Stretch" Content="Dispensing" Padding="16,0,16,0" Foreground="White" Grid.Column="4" Click="OnTabSelect" BorderThickness="0,0,0,3">
+                <Button.Background>
+                    <SolidColorBrush Color="#FF052C49" Opacity="0"/>
+                </Button.Background>
+                <Button.BorderBrush>
+                    <SolidColorBrush Color="#FF31A8FF" Opacity="0"/>
+                </Button.BorderBrush>
+            </Button>
+            <Button Name="WindowTab_Referrals" HorizontalAlignment="Stretch" Content="Referrals" Padding="16,0,16,0" Foreground="White" Grid.Column="5" Click="OnTabSelect" BorderThickness="0,0,0,3">
+                <Button.Background>
+                    <SolidColorBrush Color="#FF052C49" Opacity="0"/>
+                </Button.Background>
+                <Button.BorderBrush>
+                    <SolidColorBrush Color="#FF31A8FF" Opacity="0"/>
+                </Button.BorderBrush>
+            </Button>
+            <Button Name="WindowTab_Registration" HorizontalAlignment="Stretch" Content="Registration" Padding="16,0,16,0" Foreground="White" Grid.Column="6" Click="OnTabSelect" BorderThickness="0,0,0,3">
+                <Button.Background>
+                    <SolidColorBrush Color="#FF052C49" Opacity="0"/>
+                </Button.Background>
+                <Button.BorderBrush>
+                    <SolidColorBrush Color="#FF31A8FF" Opacity="0"/>
+                </Button.BorderBrush>
+            </Button>
         </Grid>
 
+        <DockPanel Name="ContentFrame" Grid.Row="2" LastChildFill="True"/>
 
+        <Border BorderBrush="#33000000" BorderThickness="1" Grid.Row="2" />
 
-
+        <pms-components:PMSStatusBar x:Name="StatusBar" Grid.Row="3" />
     </Grid>
 </Window>

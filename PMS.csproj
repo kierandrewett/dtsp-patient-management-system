@@ -6,13 +6,45 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>static\icon.ico</ApplicationIcon>
+    <ApplicationIcon>Static\icon.ico</ApplicationIcon>
     <Version>0.0.2.0</Version> 
     <InformationalVersion>$(Version)$(SourceRevisionId)</InformationalVersion> 
   </PropertyGroup>
   
   <ItemGroup>
-    <Content Include="static\icon.ico" />
+    <Content Include="Static\icon.ico" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <PackageReference Include="System.Data.OleDb" Version="8.0.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\Kieran\Nextcloud\Documents\PMS\.editorconfig" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="PMS.accdb" />
+    <None Remove="Static\icon.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ContentWithTargetPath Include="PMS.accdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>PMS.accdb</TargetPath>
+    </ContentWithTargetPath>
+    <Resource Include="Static\icon.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="C:\Users\Kieran\Nextcloud\Documents\PMS\.editorconfig" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="Data\PMS.laccdb">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

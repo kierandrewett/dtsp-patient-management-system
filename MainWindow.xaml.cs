@@ -1,15 +1,12 @@
-﻿using System.Diagnostics;
+﻿using PMS.Dialogs;
+using PMS.Models;
+using PMS.Pages;
+using System.Diagnostics;
+using System.Media;
 using System.Reflection;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PMS
 {
@@ -28,11 +25,7 @@ namespace PMS
     /// </summary>
     public partial class MainWindow : Window
     {
-        #if DEBUG
-        bool IsDebug = true;
-#else
-        bool IsDebug = false;
-#endif
+        public Button? OldBtnTab;
 
         private WindowTab _SelectedTab;
         WindowTab SelectedTab
@@ -50,75 +43,123 @@ namespace PMS
             }
         }
 
-        public string BuildEnv
+        WindowManager wm
         {
-            get => IsDebug ? "Debug" : "Release";
-        }
-        public string AppVersion
-        {
-            get
-            {
-                Version? ver = Assembly.GetExecutingAssembly().GetName().Version;
-                return ver != null ? ver.ToString() : "0.0.0";
-            }
+            get => (WindowManager)Application.Current.MainWindow;
         }
 
         public MainWindow()
         {
             InitializeComponent();
 
-            Title = $"Patient Record System ({BuildEnv}) - Version: {AppVersion}";
+            if (wm.AuthorisedUser is User user)
+            {
+                Debug.WriteLine($"(Main Window): Authorised as {user.Username}.");
+            }
+
+            this.SelectedTab = WindowTab.Overview;
         }
 
         private void OnTabSelect(object sender, RoutedEventArgs e)
-        { 
+        {
             Button? btn = sender as Button;
 
             if (btn != null)
             {
-                // Fallback to the overview tab if we cannot
-                // find an appropriate tab to switch to.
                 WindowTab newTab = WindowTab.Overview;
 
-                switch (btn.Content)
+                switch (btn.Name)
                 {
-                    case "Overview":
+                    case "WindowTab_Overview":
                         newTab = WindowTab.Overview;
                         break;
-                    case "Patients":
+                    case "WindowTab_Patients":
                         newTab = WindowTab.Patients;
                         break;
-                    case "Reporting":
+                    case "WindowTab_Reporting":
                         newTab = WindowTab.Reporting;
                         break;
-                    case "Dispensing":
+                    case "WindowTab_Dispensing":
                         newTab = WindowTab.Dispensing;
                         break;
-                    case "Referrals":
+                    case "WindowTab_Referrals":
                         newTab = WindowTab.Referrals;
                         break;
-                    case "Registration":
+                    case "WindowTab_Registration":
                         newTab = WindowTab.Registration;
                         break;
                     default:
                         MessageBox.Show("Received unexpected tab type.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        break;
+                        return;
                 }
 
                 this.SelectedTab = newTab;
             }
         }
 
-        private void SelectTab(WindowTab newTab)
+        private async void SelectTab(WindowTab newTab)
         {
+            string tabName = "Overview";
+            object? tabInstance = new PMS.Pages.WindowTabUnknown();
+
             switch (newTab)
             {
                 case WindowTab.Overview:
-                    ContentFrame.Navigate("https://google.com");
+                    tabName = "Overview";
+                    tabInstance = new PMS.Pages.WindowTabOverview();
+                    break;
+                case WindowTab.Patients:
+                    tabName = "Patients";
+                    break;
+                case WindowTab.Reporting:
+                    tabName = "Reporting";
+                    break;
+                case WindowTab.Dispensing:
+                    tabName = "Dispensing";
+                    break;
+                case WindowTab.Referrals:
+                    tabName = "Referrals";
+                    break;
+                case WindowTab.Registration:
+                    tabName = "Registration";
                     break;
                 default:
-                    ContentFrame.Navigate("https://bing.com");
-                    break;
+                    MessageBox.Show("Received unexpected tab type.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+            }
+
+            object btnTab = FindName($"WindowTab_{tabName}");
+
+            if (btnTab is Button tab)
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+                StatusBar.StatusLabel.Content = $"Loading {tabName}...";
+                ContentFrame.Children.Clear();
+
+                if (this.OldBtnTab != null)
+                {
+                    this.OldBtnTab.Background.Opacity = 0;
+                    this.OldBtnTab.BorderBrush.Opacity = 0;
+                }
+
+                this.OldBtnTab = tab;
+
+                tab.BorderBrush.Opacity = 1;
+                tab.Background.Opacity = 1;
+
+                Random rnd = new Random();
+                await Task.Delay(rnd.Next(50, 200));
+
+                if (tabInstance != null)
+                {
+                    Mouse.OverrideCursor = null;
+                    StatusBar.StatusLabel.Content = "Ready";
+
+                    ContentFrame.Children.Clear();
+                    ContentFrame.Children.Add((FrameworkElement)tabInstance);
+                    ((FrameworkElement)tabInstance).HorizontalAlignment = HorizontalAlignment.Stretch;
+                    ((FrameworkElement)tabInstance).VerticalAlignment = VerticalAlignment.Stretch;
+                }
             }
         }
     }
