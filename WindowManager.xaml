@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PMS"
         mc:Ignorable="d"
-        Title="{StaticResource AppFullName}" Height="1" Width="1" ShowInTaskbar="False" Visibility="Hidden" MaxWidth="1" MaxHeight="1" ResizeMode="NoResize">
+        Title="{StaticResource AppFullName}" Height="1" Width="1" ShowInTaskbar="False" Visibility="Hidden" MaxWidth="1" MaxHeight="1" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         
     </Grid>

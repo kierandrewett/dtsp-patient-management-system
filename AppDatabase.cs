@@ -42,11 +42,8 @@ namespace PMS
             );
         }
 
-        public static T? Query<T>(string query, string[] args) where T : class, new()
+        public static OleDbDataReader ExecuteQuery(OleDbConnection conn, string query, string[] args)
         {
-            OleDbConnection conn = CreateConnection();
-            OleDbDataReader reader;
-
             OleDbCommand command = new OleDbCommand(query, conn);
 
             foreach (string arg in args)
@@ -54,11 +51,19 @@ namespace PMS
                 command.Parameters.AddWithValue("?", arg);
             }
 
-            reader = command.ExecuteReader();
+            return command.ExecuteReader();
+        }
+
+        public static T[]? QueryAll<T>(string query, string[] args) where T : class, new()
+        {
+            OleDbConnection conn = CreateConnection();
+            OleDbDataReader reader = ExecuteQuery(conn, query, args);
+
+            List<T> queryResponse = new();
 
             try
             {
-                if (reader.Read())
+                while (reader.Read())
                 {
                     var objInstance = new T();
 
@@ -74,11 +79,10 @@ namespace PMS
                         }
                     }
 
-                    return objInstance;
-                } else
-                {
-                    return null;
+                    queryResponse.Add(objInstance);
                 }
+
+                return [..queryResponse];
             }
             catch (Exception ex)
             {
@@ -91,7 +95,41 @@ namespace PMS
                 reader?.Close();
                 conn?.Close();
             }
+        }
 
+        public static T? QueryFirst<T>(string query, string[] args) where T : class, new()
+        {
+            return QueryAll<T>(query, args)?.FirstOrDefault();
+        }
+
+        public static int? Update(string query, string[] args)
+        {
+            OleDbConnection conn = AppDatabase.CreateConnection();
+            OleDbDataReader reader;
+
+            try
+            {
+                reader = AppDatabase.ExecuteQuery(
+                    conn,
+                    query,
+                    args
+                );
+
+                int result = reader.RecordsAffected;
+                reader.Close();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error querying database: {ex.Message}");
+
+                return null;
+            }
+            finally
+            {
+                conn?.Close();
+            }
         }
     }
 }

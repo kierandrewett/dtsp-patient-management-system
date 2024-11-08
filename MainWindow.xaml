@@ -23,7 +23,7 @@
 
             <TextBlock 
                 VerticalAlignment="Center"
-                Text="Home" Foreground="White" Margin="16,0,16,0" FontSize="16" />
+                Text="{Binding Source={x:Static local:AppConstants.AppFullName}}" Foreground="White" Margin="16,0,16,0" FontSize="16" />
             
             <Grid Margin="16,0,16,0" HorizontalAlignment="Right">
                 <Grid.ColumnDefinitions>

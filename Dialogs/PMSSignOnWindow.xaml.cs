@@ -79,7 +79,17 @@ namespace PMS.Dialogs
             wm.AuthorisedUser = user;
 
             this.DialogResult = true;
+
             Close();
+        }
+
+        private void ForgotPassword_Click(object sender, RoutedEventArgs e)
+        {
+            PMSAccountRecoverySelfServiceWindow accRecSSWindow = new();
+            accRecSSWindow.Owner = this;
+            Hide();
+            accRecSSWindow.ShowDialog();
+            ShowDialog();
         }
     }
 }

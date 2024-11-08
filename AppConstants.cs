@@ -40,5 +40,8 @@ namespace PMS
         public static int MaximumFailedLoginAttempts = (int)Application.Current.Resources["MaximumFailedLoginAttempts"];
         public static int FailedLoginsTimeoutMins = (int)Application.Current.Resources["FailedLoginsTimeoutMins"];
 
+        public static string UnauthorisedMessage = (string)Application.Current.Resources["UnauthorisedMessage"];
+
+        public static int PasswordMinLength = (int)Application.Current.Resources["PasswordMinLength"];
     }
 }

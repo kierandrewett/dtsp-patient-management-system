@@ -3,6 +3,7 @@ using PMS.Dialogs;
 using PMS.Models;
 using PMS.Util;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -130,6 +131,45 @@ namespace PMS
             AuthorisedUser = null;
 
             Init();
+        }
+        public Result<User, Exception> HandleSecurityQuestionsRecoveryRequest(string username, Dictionary<SecurityQuestion, string> questionToAnswersMap)
+        {
+            if (AuthorisedUser != null)
+            {
+                throw new Exception("Unable to handle security questions recovery request with authorised user.");
+            }
+
+            return AuthenticationController.HandleSecurityQuestionsRecoveryRequest(
+                username, 
+                questionToAnswersMap
+            );
+        }
+
+        public Result<bool, Exception> HandlePasswordChangeRequest(User? targetUser = null)
+        {
+            Result<User, Exception> passwordChangeRequestResult = 
+                AuthenticationController.HandlePasswordChangeRequest(AuthorisedUser, targetUser);
+
+            if (passwordChangeRequestResult.IsErr())
+            {
+                return Result<bool, Exception>.Err(passwordChangeRequestResult.Error);
+            }
+
+            PMSPasswordChangeWindow passwordChangeWindow = new(passwordChangeRequestResult.Value);
+            bool? result = passwordChangeWindow.ShowDialog();
+
+            // This occurs when the dialog is closed or canceled
+            if (result == null || result == false)
+            {
+                return Result<bool, Exception>.Ok(false);
+            }
+
+            return Result<bool, Exception>.Ok(true);
+        }
+
+        public Result<bool, Exception> HandlePasswordChangeFinalRequest(User targetUser, string newPassword)
+        {
+            return AuthenticationController.HandlePasswordChangeFinalRequest(targetUser, newPassword);
         }
     }
 }
