@@ -24,5 +24,11 @@ namespace PMS.Pages
         {
             InitializeComponent();
         }
+
+        private WindowManager wm
+        {
+            get => (WindowManager)Application.Current.MainWindow;
+        }
+
     }
 }

@@ -42,11 +42,11 @@ namespace PMS
             WaitForShutdown();
         }
 
-        public async void Init()
+        public void Init()
         {
             AuthenticationController = new AuthenticationController();
 
-            // If we have a window remnants, clean them up
+            // If we have window remnants, clean them up
             MainWindow?.Close();
             MainWindow = null;
 

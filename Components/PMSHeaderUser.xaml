@@ -9,7 +9,7 @@
     <UserControl.Resources>
         <ContextMenu x:Key="UserContextMenu" Placement="Bottom">
             <MenuItem Header="{Binding UserFullName}" IsEnabled="False" />
-            <MenuItem Header="{Binding UserRole}" IsEnabled="False" />
+            <MenuItem Header="{Binding UserRole}" HeaderStringFormat="Role: {0}" IsEnabled="False" />
             <Separator />
             <MenuItem Header="Settings" />
             <MenuItem Header="Log Off..." Click="LogOff_Click" />

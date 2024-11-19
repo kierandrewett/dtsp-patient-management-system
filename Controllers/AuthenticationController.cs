@@ -124,17 +124,9 @@ namespace PMS.Controllers
            );
         }
 
-        public static User? GetUserByUsername(string username)
-        {
-            return AppDatabase.QueryFirst<User>(
-                "SELECT * FROM tblUser WHERE Username=?",
-                [username]
-            );
-        }
-
         public Result<User, Exception> HandleSecurityQuestionsRecoveryRequest(string username, Dictionary<SecurityQuestion, string> questionToAnswerMap)
         {
-            User? user = GetUserByUsername(username);
+            User? user = UserController.GetUserByUsername(username);
 
             if (user == null)
             {

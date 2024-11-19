@@ -18,5 +18,73 @@
         <!-- Icons -->
         <Geometry x:Key="PersonIcon">F1 M24,24z M0,0z M12,12C10.9,12 9.95833,11.6083 9.175,10.825 8.39167,10.0417 8,9.1 8,8 8,6.9 8.39167,5.95833 9.175,5.175 9.95833,4.39167 10.9,4 12,4 13.1,4 14.0417,4.39167 14.825,5.175 15.6083,5.95833 16,6.9 16,8 16,9.1 15.6083,10.0417 14.825,10.825 14.0417,11.6083 13.1,12 12,12z M4,20L4,17.2C4,16.6333 4.146,16.1127 4.438,15.638 4.73,15.1633 5.11733,14.8007 5.6,14.55 6.63333,14.0333 7.68333,13.646 8.75,13.388 9.81667,13.13 10.9,13.0007 12,13 13.1,12.9993 14.1833,13.1287 15.25,13.388 16.3167,13.6473 17.3667,14.0347 18.4,14.55 18.8833,14.8 19.271,15.1627 19.563,15.638 19.855,16.1133 20.0007,16.634 20,17.2L20,20 4,20z</Geometry>
         <Geometry x:Key="ClockIcon">F1 M24,24z M0,0z M12,20C14.1217,20 16.1566,19.1571 17.6569,17.6569 19.1571,16.1566 20,14.1217 20,12 20,9.87827 19.1571,7.84344 17.6569,6.34315 16.1566,4.84285 14.1217,4 12,4 9.87827,4 7.84344,4.84285 6.34315,6.34315 4.84285,7.84344 4,9.87827 4,12 4,14.1217 4.84285,16.1566 6.34315,17.6569 7.84344,19.1571 9.87827,20 12,20z M12,2C13.3132,2 14.6136,2.25866 15.8268,2.7612 17.0401,3.26375 18.1425,4.00035 19.0711,4.92893 19.9997,5.85752 20.7362,6.95991 21.2388,8.17317 21.7413,9.38642 22,10.6868 22,12 22,14.6522 20.9464,17.1957 19.0711,19.0711 17.1957,20.9464 14.6522,22 12,22 6.47,22 2,17.5 2,12 2,9.34784 3.05357,6.8043 4.92893,4.92893 6.8043,3.05357 9.34784,2 12,2z M12.5,7L12.5,12.25 17,14.92 16.25,16.15 11,13 11,7 12.5,7z</Geometry>
+        <Geometry x:Key="SearchIcon">F1 M24,24z M0,0z M19.6,21L13.3,14.7C12.8,15.1 12.225,15.4167 11.575,15.65 10.925,15.8833 10.2333,16 9.5,16 7.68333,16 6.146,15.3707 4.888,14.112 3.63,12.8533 3.00067,11.316 3,9.5 2.99933,7.684 3.62867,6.14667 4.888,4.888 6.14733,3.62933 7.68467,3 9.5,3 11.3153,3 12.853,3.62933 14.113,4.888 15.373,6.14667 16.002,7.684 16,9.5 16,10.2333 15.8833,10.925 15.65,11.575 15.4167,12.225 15.1,12.8 14.7,13.3L21,19.6 19.6,21z M9.5,14C10.75,14 11.8127,13.5627 12.688,12.688 13.5633,11.8133 14.0007,10.7507 14,9.5 13.9993,8.24933 13.562,7.187 12.688,6.313 11.814,5.439 10.7513,5.00133 9.5,5 8.24867,4.99867 7.18633,5.43633 6.313,6.313 5.43967,7.18967 5.002,8.252 5,9.5 4.998,10.748 5.43567,11.8107 6.313,12.688 7.19033,13.5653 8.25267,14.0027 9.5,14z</Geometry>
+
+        <!-- Button style -->
+        <SolidColorBrush x:Key="BtnBackgroundBrush" Color="#052C49" />
+        <SolidColorBrush x:Key="BtnBackgroundHoverBrush" Color="#094d80" />
+
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="{StaticResource BtnBackgroundBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="Transparent"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="bg" Padding="16,6,16,6" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"  Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource ResourceKey=BtnBackgroundHoverBrush}" TargetName="bg" />
+                                <Setter Property="BorderBrush" Value="{StaticResource ResourceKey=BtnBackgroundHoverBrush}" TargetName="bg" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="FocusVisualStyle">
+                <Setter.Value>
+                    <Style>
+                        <Setter Property="Control.Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <Rectangle StrokeThickness="2" Stroke="White" StrokeDashArray="2" />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Data Grid styling -->
+        <Style TargetType="{x:Type DataGridCell}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                        <Grid Background="{TemplateBinding Background}">
+                            <ContentPresenter VerticalAlignment="Center" Margin="6,0,6,0" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource BtnBackgroundHoverBrush}" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="{x:Type DataGrid}">
+            <Setter Property="AlternatingRowBackground" Value="#ededed" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="Background" Value="{x:Null}" />
+            <Setter Property="BorderBrush" Value="{x:Null}" />
+            <Setter Property="BorderBrush" Value="{x:Null}" />
+            <Setter Property="BorderThickness" Value="0,0,0,0" />
+        </Style>
     </Application.Resources>
 </Application>

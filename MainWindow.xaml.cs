@@ -1,4 +1,6 @@
-﻿using PMS.Dialogs;
+﻿using PMS.Components;
+using PMS.Controllers;
+using PMS.Dialogs;
 using PMS.Models;
 using PMS.Pages;
 using System.Diagnostics;
@@ -10,14 +12,13 @@ using System.Windows.Input;
 
 namespace PMS
 {
-    public enum WindowTab
+   public enum WindowTab
     {
         Overview,
         Patients,
-        Reporting,
-        Dispensing,
-        Referrals,
+        Scheduling,
         Registration,
+        Users,
     }
 
     /// <summary>
@@ -25,25 +26,11 @@ namespace PMS
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Button? OldBtnTab;
+        private TabController<WindowTab> TabsController;
 
-        private WindowTab _SelectedTab;
-        WindowTab SelectedTab
-        {
-            get
-            {
-                return _SelectedTab;
-            }
-            set
-            {
-                // Update the internal value
-                _SelectedTab = value;
+        private TabContent<WindowTab>[] Tabs = [];
 
-                SelectTab(value);
-            }
-        }
-
-        WindowManager wm
+        private WindowManager wm
         {
             get => (WindowManager)Application.Current.MainWindow;
         }
@@ -57,110 +44,59 @@ namespace PMS
                 Debug.WriteLine($"(Main Window): Authorised as {user.Username}.");
             }
 
-            this.SelectedTab = WindowTab.Overview;
+            Init();
         }
 
-        private void OnTabSelect(object sender, RoutedEventArgs e)
+        private void Init()
         {
-            Button? btn = sender as Button;
+            User user = wm.AuthorisedUser;
 
-            if (btn != null)
-            {
-                WindowTab newTab = WindowTab.Overview;
+            this.Tabs =
+            [
+                .. this.Tabs,
+                new TabContent<WindowTab>(
+                    WindowTab.Overview,
+                    "Overview",
+                    new WindowTabOverview(),
+                    (tab) => PermissionController.CanAccessTabContent(user, tab) != null
+                ),
+                new TabContent<WindowTab>(
+                    WindowTab.Patients,
+                    "Patients",
+                    new WindowTabUnknown(),
+                    (tab) => PermissionController.CanAccessTabContent(user, tab) != null
+                ),
+                new TabContent<WindowTab>(
+                    WindowTab.Scheduling,
+                    "Scheduling",
+                    new WindowTabUnknown(),
+                    (tab) => PermissionController.CanAccessTabContent(user, tab) != null
+                ),
+                new TabContent<WindowTab>(
+                    WindowTab.Registration,
+                    "Registration",
+                    new WindowTabUnknown(),
+                    (tab) => PermissionController.CanAccessTabContent(user, tab) != null
+                ),
+                new TabContent<WindowTab>(
+                    WindowTab.Users,
+                    "Users",
+                    new WindowTabUsers(),
+                    (tab) => PermissionController.CanAccessTabContent(user, tab) != null
+                )
+            ];
 
-                switch (btn.Name)
-                {
-                    case "WindowTab_Overview":
-                        newTab = WindowTab.Overview;
-                        break;
-                    case "WindowTab_Patients":
-                        newTab = WindowTab.Patients;
-                        break;
-                    case "WindowTab_Reporting":
-                        newTab = WindowTab.Reporting;
-                        break;
-                    case "WindowTab_Dispensing":
-                        newTab = WindowTab.Dispensing;
-                        break;
-                    case "WindowTab_Referrals":
-                        newTab = WindowTab.Referrals;
-                        break;
-                    case "WindowTab_Registration":
-                        newTab = WindowTab.Registration;
-                        break;
-                    default:
-                        MessageBox.Show("Received unexpected tab type.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                }
-
-                this.SelectedTab = newTab;
-            }
+            this.TabsController = new TabController<WindowTab>(
+                this,
+                TabsStrip,
+                TabsContent,
+                Tabs
+            );
         }
 
-        private async void SelectTab(WindowTab newTab)
+        private void OnBrandName_Click(object sender, RoutedEventArgs e)
         {
-            string tabName = "Overview";
-            object? tabInstance = new PMS.Pages.WindowTabUnknown();
-
-            switch (newTab)
-            {
-                case WindowTab.Overview:
-                    tabName = "Overview";
-                    tabInstance = new PMS.Pages.WindowTabOverview();
-                    break;
-                case WindowTab.Patients:
-                    tabName = "Patients";
-                    break;
-                case WindowTab.Reporting:
-                    tabName = "Reporting";
-                    break;
-                case WindowTab.Dispensing:
-                    tabName = "Dispensing";
-                    break;
-                case WindowTab.Referrals:
-                    tabName = "Referrals";
-                    break;
-                case WindowTab.Registration:
-                    tabName = "Registration";
-                    break;
-                default:
-                    MessageBox.Show("Received unexpected tab type.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-            }
-
-            object btnTab = FindName($"WindowTab_{tabName}");
-
-            if (btnTab is Button tab)
-            {
-                Mouse.OverrideCursor = Cursors.Wait;
-                StatusBar.StatusLabel.Content = $"Loading {tabName}...";
-                ContentFrame.Children.Clear();
-
-                if (this.OldBtnTab != null)
-                {
-                    this.OldBtnTab.Background.Opacity = 0;
-                    this.OldBtnTab.BorderBrush.Opacity = 0;
-                }
-
-                this.OldBtnTab = tab;
-
-                tab.BorderBrush.Opacity = 1;
-                tab.Background.Opacity = 1;
-
-                Random rnd = new Random();
-                await Task.Delay(rnd.Next(50, 200));
-
-                if (tabInstance != null)
-                {
-                    Mouse.OverrideCursor = null;
-                    StatusBar.StatusLabel.Content = "Ready";
-
-                    ContentFrame.Children.Clear();
-                    ContentFrame.Children.Add((FrameworkElement)tabInstance);
-                    ((FrameworkElement)tabInstance).HorizontalAlignment = HorizontalAlignment.Stretch;
-                    ((FrameworkElement)tabInstance).VerticalAlignment = VerticalAlignment.Stretch;
-                }
-            }
+            this.TabsController.SelectedTab = this.Tabs.First(t => t.Value == WindowTab.Overview);
         }
     }
 }

@@ -20,6 +20,17 @@ namespace PMS.Components
     /// </summary>
     public partial class PMSStatusBar : UserControl
     {
+        public string StatusText
+        {
+            get { return (string)StatusLabel.Content; }
+            set { StatusLabel.Content = value; }
+        }
+        public string StatusAuxiliaryText
+        {
+            get { return (string)StatusAuxiliary.Content; }
+            set { StatusAuxiliary.Content = value; }
+        }
+
         public PMSStatusBar()
         {
             InitializeComponent();

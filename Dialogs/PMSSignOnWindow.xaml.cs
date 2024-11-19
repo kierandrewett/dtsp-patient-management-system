@@ -1,9 +1,11 @@
-﻿using PMS.Models;
+﻿using PMS.Controllers;
+using PMS.Models;
 using PMS.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -78,7 +80,12 @@ namespace PMS.Dialogs
             User user = authenticationResult.Value;
             wm.AuthorisedUser = user;
 
-            this.DialogResult = true;
+            // Ignore errors for this weird edge case where
+            // authenticating too quickly causes an error.
+            try
+            {
+                this.DialogResult = true;
+            } catch (Exception ex) { }
 
             Close();
         }
@@ -91,5 +98,49 @@ namespace PMS.Dialogs
             accRecSSWindow.ShowDialog();
             ShowDialog();
         }
+
+#if DEBUG
+        private void DebugSignIn(UserType userType, object sender, RoutedEventArgs e)
+        {
+            if (AppConstants.IsDebug)
+            {
+                User[]? users = UserController.GetUsersByType(userType);
+
+                if (users != null && users.Length >= 1)
+                {
+                    Random rng = new Random();
+                    int userIndex = rng.Next(0, users.Length);
+                    User user = users[userIndex];
+
+                    UsernameField.Text = user.Username;
+                    PasswordField.Password = user.Password;
+                    SignIn_Click(sender, e);
+                } else
+                {
+                    MessageBox.Show(
+                        "No users found for that user type!",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                }
+            }
+        }
+
+        private void DebugDoctorSignIn_Click(object sender, RoutedEventArgs e)
+        {
+            DebugSignIn(UserType.Doctor, sender, e);
+        }
+
+        private void DebugNurseSignIn_Click(object sender, RoutedEventArgs e)
+        {
+            DebugSignIn(UserType.Nurse, sender, e);
+        }
+
+        private void DebugAdminSignIn_Click(object sender, RoutedEventArgs e)
+        {
+            DebugSignIn(UserType.Admin, sender, e);
+        }
     }
+#endif
 }

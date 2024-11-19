@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="PMS.Pages.WindowTabUsers"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PMS.Pages"
+             xmlns:pms-components="clr-namespace:PMS.Components"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Background="#f3f3f3">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Background="#ffffff" VerticalAlignment="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="1" />
+            </Grid.RowDefinitions>
+            
+            <Grid Grid.Row="0" Margin="28,20,28,20">
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                    <pms-components:PMSIcon Width="32" Height="32" Source="{StaticResource PersonIcon}" />
+                    <Label Content="Users" VerticalAlignment="Center" FontSize="28" FontWeight="Medium" />
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Right">
+                    <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                        <pms-components:PMSIcon Width="16" Height="16" Source="{StaticResource SearchIcon}" />
+                        <Label Content="Search" FontWeight="Medium" />
+                    </StackPanel>
+                    <TextBox Width="200" Height="20" Name="SearchBox" KeyDown="OnSearchBoxUpdated" KeyUp="OnSearchBoxUpdated" LostFocus="OnSearchBoxUpdated" TextChanged="OnSearchBoxUpdated" />
+                </StackPanel>
+            </Grid>
+
+            <Border BorderBrush="#33000000" BorderThickness="1" Grid.Row="1" />
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="28,16,28,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0" FontWeight="Medium" Content="{Binding ElementName=DataGrid_Users, Path=SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Edit..." />
+            </StackPanel>
+        </Grid>
+
+        <DataGrid 
+            Grid.Row="2" 
+            VerticalScrollBarVisibility="Visible" 
+            Padding="28,0,28,0" 
+            ItemsSource="{Binding Users}"
+            Name="DataGrid_Users"
+            AutoGenerateColumns="False" 
+            SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
+            IsReadOnly="True"
+        >
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding IsSelected}" />
+                <DataGridTextColumn Header="ID" Binding="{Binding User.ID}" />
+                <DataGridTextColumn Header="Username" Binding="{Binding User.Username}"/>
+                <DataGridTextColumn Header="Forename(s)" Binding="{Binding User.Forenames}"/>
+                <DataGridTextColumn Header="Surname" Binding="{Binding User.Surname}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding User.UserType}"/>
+                <DataGridCheckBoxColumn Header="Account disabled" Binding="{Binding User.IsDisabled}"/>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button>Edit...</Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button>...</Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

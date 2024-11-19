@@ -1,8 +1,11 @@
-﻿using System;
+﻿using PMS.Util;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 
 namespace PMS.Models
 {
@@ -14,14 +17,94 @@ namespace PMS.Models
         Nurse
     }
 
-    public class User
+    public class User : PropertyObservable
     {
-        public int ID { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public UserType UserType { get; set; }
-        public Title Title { get; set; }
-        public string Forenames { get; set; }
-        public string Surname { get; set; }
+        protected int _ID;
+        public int ID
+        {
+            get { return _ID; }
+            set
+            {
+                _ID = value;
+                DidUpdateProperty("ID");
+            }
+        }
+
+        protected string _Username;
+        public string Username
+        {
+            get { return _Username; }
+            set
+            {
+                _Username = value;
+                DidUpdateProperty("Username");
+            }
+        }
+
+        protected string _Password;
+        public string Password
+        {
+            get { return _Password; }
+            set
+            {
+                _Password = value;
+                DidUpdateProperty("Password");
+            }
+        }
+
+        protected UserType _UserType;
+        public UserType UserType
+        {
+            get { return _UserType; }
+            set
+            {
+                _UserType = value;
+                DidUpdateProperty("UserType");
+            }
+        }
+
+        protected Title _Title;
+        public Title Title
+        {
+            get { return _Title; }
+            set
+            {
+                _Title = value;
+                DidUpdateProperty("Title");
+            }
+        }
+
+        protected string _Forenames;
+        public string Forenames
+        {
+            get { return _Forenames; }
+            set
+            {
+                _Forenames = value;
+                DidUpdateProperty("Forenames");
+            }
+        }
+
+        protected string _Surname;
+        public string Surname
+        {
+            get { return _Surname; }
+            set
+            {
+                _Surname = value;
+                DidUpdateProperty("Surname");
+            }
+        }
+
+        protected bool _IsDisabled;
+        public bool IsDisabled
+        {
+            get { return _IsDisabled; }
+            set
+            {
+                _IsDisabled = value;
+                DidUpdateProperty("IsDisabled");
+            }
+        }
     }
 }

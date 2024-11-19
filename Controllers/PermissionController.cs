@@ -65,5 +65,39 @@ namespace PMS.Controllers
                 return targetUser;
             }
         }
+
+        public static User? CanAccessTabContent(User user, WindowTab windowTab)
+        {
+            UserType userType = user.UserType;
+
+            switch (windowTab)
+            {
+                case WindowTab.Patients:
+                    if (
+                        userType == UserType.Admin ||
+                        userType == UserType.Doctor ||
+                        userType == UserType.Nurse
+                    )
+                    {
+                        return user;
+                    }
+
+                    break;
+                case WindowTab.Scheduling:
+                    if (
+                        userType == UserType.Doctor ||
+                        userType == UserType.Nurse
+                    )
+                    {
+                        return user;
+                    }
+
+                    break;
+                default:
+                    return user;
+            }
+
+            return null;
+        }
     }
 }

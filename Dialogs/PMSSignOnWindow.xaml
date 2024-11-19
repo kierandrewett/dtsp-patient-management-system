@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PMS.Dialogs"
+        xmlns:pms-components="clr-namespace:PMS.Components"
         mc:Ignorable="d"
         Title="" Height="600" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
@@ -43,11 +44,16 @@
             <StackPanel Grid.Row="3" HorizontalAlignment="Center">
                 <Button Name="SubmitButton" IsDefault="True" Content="Sign In" HorizontalAlignment="Center" Padding="10,2,10,2" Click="SignIn_Click"/>
 
-                <TextBlock Margin="0,10,0,0">           
+                <TextBlock Margin="0,10,0,0" TextAlignment="Center">           
                     <Hyperlink Click="ForgotPassword_Click">
                         Forgot your password?
                     </Hyperlink>
                 </TextBlock>
+
+                <Button Content="DEBUG: Use doctor user" HorizontalAlignment="Center" Padding="10,2,10,2" Click="DebugDoctorSignIn_Click" />
+                <Button Content="DEBUG: Use admin user" HorizontalAlignment="Center" Padding="10,2,10,2" Click="DebugAdminSignIn_Click" />
+                <Button Content="DEBUG: Use nurse user" HorizontalAlignment="Center" Padding="10,2,10,2" Click="DebugNurseSignIn_Click" />
+
             </StackPanel>
 
         </Grid>

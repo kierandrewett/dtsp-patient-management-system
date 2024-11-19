@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="PMS.Components.PMSTabItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PMS.Components"
+             xmlns:converters="clr-namespace:PMS.Util.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="60" d:DesignWidth="100">
+    <UserControl.Resources>
+        <converters:BoolToDouble x:Key="BoolToDouble" />
+
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#FF052C49" Opacity="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToDouble}}"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#FF31A8FF" Opacity="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToDouble}}"/>
+    </UserControl.Resources> 
+   
+    <Button HorizontalAlignment="Stretch" Padding="16,0,16,0" Foreground="White" BorderThickness="0,0,0,3" Content="{Binding Label}" Click="InnerButton_Click">
+        <Button.Background>
+            <StaticResource ResourceKey="BackgroundBrush"/>
+        </Button.Background>
+        <Button.BorderBrush>
+            <StaticResource ResourceKey="BorderBrush"/>
+        </Button.BorderBrush>
+    </Button>
+</UserControl>
