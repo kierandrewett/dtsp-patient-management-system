@@ -25,7 +25,7 @@ namespace PMS
         {
             object newValue;
 
-            Debug.WriteLine("(Database ORM Reflection): Currently processing: " + property.PropertyType);
+            Debug.WriteLine($"(Database ORM Reflection): Currently processing: {property.Name}: {property.PropertyType}");
 
             // Special case for enums to handle the conversion
             if (property.PropertyType.IsEnum)

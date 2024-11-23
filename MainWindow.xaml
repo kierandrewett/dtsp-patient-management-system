@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PMS"
-        xmlns:pms-components="clr-namespace:PMS.Components"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
         mc:Ignorable="d"
         Title="{Binding Source={x:Static local:AppConstants.AppComputedTitle}}" Height="720" Width="1000" MinHeight="200" MinWidth="600" WindowStartupLocation="CenterScreen">
     <Grid>
@@ -35,8 +35,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 
-                <pms-components:PMSHeaderUser Grid.Column="0" Margin="0,0,12,0" />
-                <pms-components:PMSHeaderClock Grid.Column="1" />
+                <pmscomponents:PMSHeaderUser Grid.Column="0" Margin="0,0,12,0" />
+                <pmscomponents:PMSHeaderClock Grid.Column="1" />
             </Grid>
         </Grid>
 
@@ -48,6 +48,6 @@
 
         <Border BorderBrush="#33000000" BorderThickness="1" Grid.Row="2" />
 
-        <pms-components:PMSStatusBar x:Name="StatusBar" Grid.Row="3" />
+        <pmscomponents:PMSStatusBar x:Name="StatusBar" Grid.Row="3" />
     </Grid>
 </Window>

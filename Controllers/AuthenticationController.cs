@@ -126,7 +126,7 @@ namespace PMS.Controllers
 
         public Result<User, Exception> HandleSecurityQuestionsRecoveryRequest(string username, Dictionary<SecurityQuestion, string> questionToAnswerMap)
         {
-            User? user = UserController.GetUserByUsername(username);
+            User? user = User.GetUserByUsername(username);
 
             if (user == null)
             {

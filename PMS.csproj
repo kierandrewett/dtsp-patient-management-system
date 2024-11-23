@@ -10,6 +10,13 @@
     <Version>0.0.2.0</Version> 
     <InformationalVersion>$(Version)$(SourceRevisionId)</InformationalVersion> 
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="NewFolder\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
+    <None Remove="NewFolder\**" />
+    <Page Remove="NewFolder\**" />
+  </ItemGroup>
   
   <ItemGroup>
     <Content Include="Static\icon.ico" />

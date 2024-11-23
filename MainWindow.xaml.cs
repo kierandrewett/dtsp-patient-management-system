@@ -57,34 +57,46 @@ namespace PMS
                 new TabContent<WindowTab>(
                     WindowTab.Overview,
                     "Overview",
-                    new WindowTabOverview(),
+                    () => new WindowTabOverview(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
                 ),
                 new TabContent<WindowTab>(
                     WindowTab.Patients,
                     "Patients",
-                    new WindowTabUnknown(),
+                    () => new WindowTabPatients(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
                 ),
                 new TabContent<WindowTab>(
                     WindowTab.Scheduling,
                     "Scheduling",
-                    new WindowTabUnknown(),
+                    () => new WindowTabUnknown(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
                 ),
                 new TabContent<WindowTab>(
                     WindowTab.Registration,
                     "Registration",
-                    new WindowTabUnknown(),
+                    () => new WindowTabUnknown(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
                 ),
                 new TabContent<WindowTab>(
                     WindowTab.Users,
                     "Users",
-                    new WindowTabUsers(),
+                    () => new WindowTabUsers(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
                 )
             ];
+
+            // Start tabs functionality sanity check
+            if (AppConstants.IsDebug)
+            {
+                foreach (TabContent<WindowTab> tab in this.Tabs)
+                {
+                    // Just attempt to render each tab's content
+                    // if it fails at all, we'll know at window init
+                    // rather than when the tab is loaded in.
+                    tab.RenderContent();
+                }
+            }
 
             this.TabsController = new TabController<WindowTab>(
                 this,

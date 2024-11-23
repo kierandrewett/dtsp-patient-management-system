@@ -1,0 +1,56 @@
+﻿<UserControl x:Class="PMS.Components.PMSDataView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PMS.Components"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <DataTemplate x:Key="DataGrid_EditButton">
+            <Button>Edit...</Button>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="28,16,28,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox Name="AllItemsSelectedCheckbox" Margin="12,12,4,12" Click="OnSelectAllCheckBox_Click" />
+                <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=Items.Count}" ContentStringFormat="‎{0} result(s) found" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Label Content="Tip: Shift + Click to select multiple." VerticalAlignment="Center" />
+                <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" />
+            </StackPanel>
+        </Grid>
+
+        <DataGrid 
+            Grid.Row="1" 
+            VerticalScrollBarVisibility="Visible" 
+            Padding="28,0,28,0" 
+            ItemsSource="{Binding ObservableDataSource}"
+            Name="DataGrid"
+            AutoGenerateColumns="False" 
+            SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
+            CurrentCellChanged="OnDataGrid_CurrentCellChanged"
+            IsReadOnly="True"
+            FrozenColumnCount="1"
+        >
+            <DataGrid.Columns>
+                
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

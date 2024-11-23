@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
@@ -17,15 +18,14 @@ namespace PMS.Controllers
             {
                 bool matches = false;
 
-                Debug.WriteLine(value);
                 foreach (PropertyInfo prop in value.GetType().GetProperties())
                 {
 
                     var propValue = prop.GetValue(value);
 
-                    if (propValue is string || propValue is int || propValue is float)
+                    if (propValue != null && propValue!.ToString() != null)
                     {
-                        string strValue = propValue!.ToString();
+                        string strValue = Regex.Replace(propValue!.ToString(), "\\W", "");
 
                         if (strValue.Contains(filter, StringComparison.OrdinalIgnoreCase))
                         {

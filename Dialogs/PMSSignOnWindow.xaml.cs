@@ -104,7 +104,7 @@ namespace PMS.Dialogs
         {
             if (AppConstants.IsDebug)
             {
-                User[]? users = UserController.GetUsersByType(userType);
+                User[]? users = User.GetUsersByType(userType);
 
                 if (users != null && users.Length >= 1)
                 {

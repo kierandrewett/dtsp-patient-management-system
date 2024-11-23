@@ -1,4 +1,5 @@
-﻿using PMS.Context;
+﻿using PMS.Components;
+using PMS.Context;
 using PMS.Controllers;
 using PMS.Models;
 using PMS.Util;
@@ -7,9 +8,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Printing;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -24,17 +27,16 @@ using System.Windows.Shapes;
 
 namespace PMS.Pages
 {
-
     /// <summary>
-    /// Interaction logic for WindowTabUsers.xaml
+    /// Interaction logic for WindowTabPatients.xaml
     /// </summary>
-    public partial class WindowTabUsers : UserControl
+    public partial class WindowTabPatients : UserControl
     {
-        public WindowTabUsers()
+        public WindowTabPatients()
         {
             InitializeComponent();
 
-            DataContext = new UsersDataContext();
+            DataContext = new PatientsDataContext();
         }
     }
 }

@@ -87,7 +87,22 @@ namespace PMS.Controllers
             await Task.Delay(rnd.Next(100, 400));
 
             this._TabsContent.Children.Clear();
-            this._TabsContent.Children.Add(SelectedTab.Content);
+            FrameworkElement Content = new WindowTabUnknown();
+            try
+            {
+                Content = SelectedTab.RenderContent();
+            } catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                MessageBox.Show(
+                    $"We're sorry, something went wrong while displaying this content.\n\nError: {ex.ToString()}", 
+                    "Error", 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Error
+                );   
+            }
+
+            this._TabsContent.Children.Add(Content);
 
             Mouse.OverrideCursor = null;
             this._Win.StatusBar.StatusText = $"Ready";

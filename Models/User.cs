@@ -17,19 +17,8 @@ namespace PMS.Models
         Nurse
     }
 
-    public class User : PropertyObservable
+    public class User : Person<int>
     {
-        protected int _ID;
-        public int ID
-        {
-            get { return _ID; }
-            set
-            {
-                _ID = value;
-                DidUpdateProperty("ID");
-            }
-        }
-
         protected string _Username;
         public string Username
         {
@@ -63,39 +52,6 @@ namespace PMS.Models
             }
         }
 
-        protected Title _Title;
-        public Title Title
-        {
-            get { return _Title; }
-            set
-            {
-                _Title = value;
-                DidUpdateProperty("Title");
-            }
-        }
-
-        protected string _Forenames;
-        public string Forenames
-        {
-            get { return _Forenames; }
-            set
-            {
-                _Forenames = value;
-                DidUpdateProperty("Forenames");
-            }
-        }
-
-        protected string _Surname;
-        public string Surname
-        {
-            get { return _Surname; }
-            set
-            {
-                _Surname = value;
-                DidUpdateProperty("Surname");
-            }
-        }
-
         protected bool _IsDisabled;
         public bool IsDisabled
         {
@@ -105,6 +61,30 @@ namespace PMS.Models
                 _IsDisabled = value;
                 DidUpdateProperty("IsDisabled");
             }
+        }
+
+        public static User[]? GetAllUsers()
+        {
+            return AppDatabase.QueryAll<User>(
+                "SELECT * FROM tblUser",
+                []
+            );
+        }
+
+        public static User? GetUserByUsername(string username)
+        {
+            return AppDatabase.QueryFirst<User>(
+                "SELECT * FROM tblUser WHERE Username=?",
+                [username]
+            );
+        }
+
+        public static User[]? GetUsersByType(UserType userType)
+        {
+            return AppDatabase.QueryAll<User>(
+                "SELECT * FROM tblUser WHERE UserType=?",
+                [((int)userType).ToString()]
+            );
         }
     }
 }
