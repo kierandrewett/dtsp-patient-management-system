@@ -55,7 +55,7 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Visibility="{Binding HasSave, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">
-                            <Button Click="OnSaveButtonClicked">Save changes</Button>
+                            <Button Name="SaveButton" Click="OnSaveButtonClicked">Save changes</Button>
                         </StackPanel>
                     </Grid>
                     

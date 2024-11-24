@@ -1,4 +1,5 @@
 ﻿using PMS.Controllers;
+using PMS.Models;
 using PMS.Util;
 using System;
 using System.Collections;
@@ -8,6 +9,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Media;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -83,13 +85,23 @@ namespace PMS.Components
 
         public static readonly DependencyProperty ColumnsProperty = DependencyProperty.Register("Columns", typeof(Dictionary<string, string>), typeof(PMSDataManager), new PropertyMetadata(null, OnDataSourceChanged));
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public Dictionary<string, string> Columns
         {
             get { return (Dictionary<string, string>)GetValue(ColumnsProperty); }
             set { SetValue(ColumnsProperty, value); }
         }
+
+
+        public static readonly DependencyProperty FormProperty = DependencyProperty.Register("Form", typeof(FormItemBase[]), typeof(PMSDataManager));
+
+        public FormItemBase[] Form
+        {
+            get { return (FormItemBase[])GetValue(FormProperty); }
+            set { SetValue(FormProperty, value); }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
 
         private DataManagerPanel _SelectedPanel;
         public DataManagerPanel SelectedPanel
@@ -337,6 +349,33 @@ namespace PMS.Components
             get => SelectedPanel != DataManagerPanel.Default;
         }
 
+        private DataItem[]? _EditingDataItems;
+        public DataItem[]? EditingDataItems
+        {
+            get => _EditingDataItems;
+            set
+            {
+                _EditingDataItems = value;
+                DidUpdateProperty("EditingDataItems");
+            }
+        }
+
+        public DataItem? EditingDataItem
+        {
+            get => EditingDataItems?[EditingDataItemIndex ?? 0] ?? null;
+        }
+
+        private int? _EditingDataItemIndex;
+        public int? EditingDataItemIndex
+        {
+            get => _EditingDataItemIndex;
+            set
+            {
+                _EditingDataItemIndex = value;
+                DidUpdateProperty("EditingDataItemIndex");
+            }
+        }
+
         private FrameworkElement? GetPanelElement(DataManagerPanel panel)
         {
             return (FrameworkElement?)this.FindName($"Panel{panel.ToString()}");
@@ -385,6 +424,25 @@ namespace PMS.Components
             remove { RemoveHandler(EntryRequestEditEvent, value); }
         }
 
+        public bool UnsavedChangesLock
+        {
+            get
+            {
+                Window parentWindow = Window.GetWindow(this);
+
+                return ((MainWindow)parentWindow)?.UnsavedChangesLock ?? false;
+            }
+            set
+            {
+                Window parentWindow = Window.GetWindow(this);
+
+                if (parentWindow is MainWindow mainWindow)
+                {
+                    mainWindow.UnsavedChangesLock = value;
+                }
+            }
+        }
+
         public void OnDataItem_RequestEdit(object sender, RoutedEventArgs e)
         {
             if (sender is Button button)
@@ -395,35 +453,40 @@ namespace PMS.Components
             }
         }
 
-        private void EnterEditMode()
+        private void EnterEditMode(DataItem[]? dataItems)
         {
+            Debug.WriteLine("Entering edit mode for: " + dataItems);
             SelectedPanel = DataManagerPanel.Edit;
+            EditingDataItems = dataItems;
+            EditingDataItemIndex = 0;
+            DidUpdateProperty("EditingDataItem");
 
-            UpdateUnsavedChangesState(true);
+            UnsavedChangesLock = true;
         }
 
         private void ExitEditMode()
         {
             if (SelectedPanel == DataManagerPanel.Edit)
             {
-                if (!ChangesProtectionController.UnsavedChangesGuard())
-                {
+                if (
+                    UnsavedChangesLock == true && 
+                    !ChangesProtectionController.UnsavedChangesGuard()
+                ) {
                     return;
                 }
             }
 
             SelectedPanel = DataManagerPanel.Default;
-            UpdateUnsavedChangesState(false);
-        }
+            EditingDataItems = null;
+            EditingDataItemIndex = null;
 
-        private void UpdateUnsavedChangesState(bool newValue)
-        {
-            Window parentWindow = Window.GetWindow(this);
-            Debug.WriteLine(parentWindow);
-            if (parentWindow is MainWindow mainWindow)
+            UnsavedChangesLock = false;
+
+            Window parent = Window.GetWindow(this);
+
+            if (parent is MainWindow mainWindow)
             {
-
-                mainWindow.UnsavedChangesLock = newValue;
+                mainWindow.TabsController.ReloadSelectedTab();
             }
         }
 
@@ -447,12 +510,61 @@ namespace PMS.Components
 
             Debug.WriteLine("Editing " + numSelected);
 
-            EnterEditMode();
+            EnterEditMode(DataGrid.SelectedItems.Cast<DataItem>().ToArray());
         }
 
-        public void OnSaveButton_Click(object sender, RoutedEventArgs e)
+        public void OnRequestNew_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Saved");
+            EnterEditMode(null);
+        }
+
+        public async void OnSaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine(sender);
+            if (sender is PMSContentHeader header)
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                header.SaveButton.IsEnabled = false;
+
+                Random rnd = new Random();
+                await Task.Delay(rnd.Next(100, 400));
+
+                // If we're editing an existing record
+                // we will have a EditingDataItem.
+                if (
+                    EditingDataItem != null &&
+                    EditingDataItems.Length > 1 &&
+                    (EditingDataItemIndex + 1) < EditingDataItems.Length)
+                {
+                    if (DataForm.SubmitForm())
+                    {
+                        EditingDataItemIndex++;
+                        DidUpdateProperty("EditingDataItem");
+
+                        // Indicate that the record has been
+                        // saved without prompting the user
+                        SystemSounds.Asterisk.Play();
+                    }
+                }
+                else if (DataForm.SubmitForm())
+                {
+                    // Otherwise, we can assume we have exhausted the list
+                    // OR: we are creating a new record
+                    MessageBox.Show(
+                        $"Successfully saved {EditingDataItems?.Length ?? 1} records.",
+                        "Saved records",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information
+                    );
+
+                    UnsavedChangesLock = false;
+                    ExitEditMode();
+                }
+
+                Mouse.OverrideCursor = null;
+                header.SaveButton.IsEnabled = true;
+            }
         }
     }
 }

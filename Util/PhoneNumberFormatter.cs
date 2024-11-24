@@ -14,6 +14,11 @@ namespace PMS.Util
 
         public static string Format(string phoneNumber)
         {
+            if (phoneNumber.Length <= 0)
+            {
+                return "";
+            }
+
             // Strip out everything except for numbers
             phoneNumber = Regex.Replace(phoneNumber, "[^0-9+]+", "");
 

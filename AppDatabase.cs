@@ -102,6 +102,11 @@ namespace PMS
             return QueryAll<T>(query, args)?.FirstOrDefault();
         }
 
+        public static int QueryCount<T>(string query, string[] args) where T : class, new()
+        {
+            return QueryAll<T>(query, args)?.Length ?? 0;
+        }
+
         public static int? Update(string query, string[] args)
         {
             OleDbConnection conn = AppDatabase.CreateConnection();

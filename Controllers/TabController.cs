@@ -54,6 +54,12 @@ namespace PMS.Controllers
         {
             get => (WindowManager)Application.Current.MainWindow;
         }
+        
+        public void ReloadSelectedTab()
+        {
+            TabContent<T> savedTab = SelectedTab;
+            SelectedTab = savedTab;
+        }
 
         private void OnTabSelect(object target, RoutedEventArgs e)
         {

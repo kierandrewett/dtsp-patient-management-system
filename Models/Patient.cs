@@ -274,5 +274,52 @@ namespace PMS.Models
                 []
             );
         }
+
+        // PRS-DATE_ADDED-SEQUENCE_NUMBER
+        public static string GeneratePatientID()
+        {
+            DateTime dt = DateTime.Now;
+
+            int currentSequence = AppDatabase.QueryCount<Patient>(
+                "SELECT * FROM tblPatient WHERE DateCreated = Date()",
+                []
+            );
+
+            string paddedDay = dt.Day.ToString().PadLeft(2, '0');
+            string paddedMonth = dt.Month.ToString().PadLeft(2, '0');
+
+            string formattedDate = $"{paddedDay}{paddedMonth}{dt.Year}";
+
+            string nextSequence = (currentSequence + 1).ToString().PadLeft(2, '0');
+
+            return string.Join("-", [
+                AppConstants.AppName,
+                formattedDate,
+                nextSequence
+            ]).ToUpper();
+        }
+
+        public static Dictionary<PatientGender, string> GetAllGenderOptions()
+        {
+            Dictionary<PatientGender, string> genders = new() { };
+
+            GenderObject[]? databaseGenders = AppDatabase.QueryAll<GenderObject>(
+                "SELECT * FROM tblGender",
+                []
+            );
+
+            if (databaseGenders != null)
+            {
+                foreach (GenderObject genderObj in databaseGenders)
+                {
+                    genders.Add(
+                        (PatientGender)genderObj.ID, 
+                        genderObj.Gender
+                    );
+                }
+            }
+
+            return genders;
+        }
     }
 }

@@ -12,10 +12,10 @@ namespace PMS.Controllers
         public static bool UnsavedChangesGuard()
         {
             MessageBoxResult result = MessageBox.Show(
-                    "Changes you have made to data will not be saved.",
+                    "Changes you have made to data will NOT be saved.",
                     "Leave edit mode?",
                     MessageBoxButton.YesNo,
-                    MessageBoxImage.Question,
+                    MessageBoxImage.Warning,
                     MessageBoxResult.No
                 );
 

@@ -12,5 +12,6 @@
         PanelIcon="{StaticResource PersonGroupIcon}"
         DataSource="{Binding DataContext.DataSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
         Columns="{Binding DataContext.Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        Form="{Binding DataContext.Form, RelativeSource={RelativeSource AncestorType=UserControl}}"    
     />
 </UserControl>

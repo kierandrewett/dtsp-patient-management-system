@@ -37,12 +37,13 @@
         <Grid Grid.Row="2" Name="PanelDefault" Visibility="Hidden">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="28,16,28,16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
@@ -52,15 +53,17 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Label Content="Tip: Shift + Click to select multiple." VerticalAlignment="Center" />
                     <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
 
                     <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestEditSelected_Click" />
+                    <Button Content="Create new..." Click="OnRequestNew_Click" />
                 </StackPanel>
             </Grid>
 
+            <Label Grid.Row="1" Margin="28,-10,28,10" >Tip: Shift + Click to select multiple.</Label>
+
             <DataGrid
-                Grid.Row="1"
+                Grid.Row="2"
                 VerticalScrollBarVisibility="Visible" 
                 Padding="28,0,28,0" 
                 ItemsSource="{Binding ObservableDataSource}"
@@ -75,6 +78,8 @@
 
                 </DataGrid.Columns>
             </DataGrid>
+            
+            
         </Grid>
 
         <Grid Grid.Row="2" Name="PanelEdit" Visibility="Hidden" Margin="28,16,28,16">
@@ -84,25 +89,10 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="1" Margin="0,16,0,16">
-                <StackPanel>
-                    <Label Content="ID" FontWeight="Bold" />
-                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
-                </StackPanel>
-
-                <StackPanel>
-                    <Label Content="ID" FontWeight="Bold" />
-                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
-                </StackPanel>
-
-                <StackPanel>
-                    <Label Content="ID" FontWeight="Bold" />
-                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
-                </StackPanel>
-
-                <StackPanel>
-                    <Label Content="ID" FontWeight="Bold" />
-                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
-                </StackPanel>
+                <pmscomponents:PMSContextualForm 
+                    x:Name="DataForm" 
+                    Schema="{Binding Form, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    DataSource="{Binding EditingDataItem, RelativeSource={RelativeSource AncestorType=UserControl}}" />
             </StackPanel>
         </Grid>
     </Grid>

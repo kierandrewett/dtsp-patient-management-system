@@ -11,5 +11,6 @@ namespace PMS.Context
     {
         public T[] DataSource { get; set; }
         public Dictionary<string, string> Columns { get; set; }
+        public FormItemBase[] Form { get; set; }
     }
 }
