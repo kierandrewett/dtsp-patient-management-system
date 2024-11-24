@@ -128,6 +128,16 @@ namespace PMS
 
         public void HandleLogOffRequest()
         {
+            if (
+                this.MainWindow != null &&
+                this.MainWindow!.UnsavedChangesLock && 
+                !ChangesProtectionController.UnsavedChangesGuard()
+            ) {
+                return;
+            }
+
+            this.MainWindow!.UnsavedChangesLock = false;
+
             AuthorisedUser = null;
 
             Init();

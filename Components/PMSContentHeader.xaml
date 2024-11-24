@@ -10,6 +10,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:BoolToVisibility x:Key="BoolToVisibility" />
+        <converters:BoolToVisibilityCollapsed x:Key="BoolToVisibilityCollapsed" />
     </UserControl.Resources>
 
     <Grid Background="#ffffff" VerticalAlignment="Bottom">
@@ -18,18 +19,47 @@
             <RowDefinition Height="1" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="28,20,28,20">
-            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
-                <pmscomponents:PMSIcon Width="32" Height="32" Source="{Binding Icon}" />
-                <Label Content="{Binding Title}" VerticalAlignment="Center" FontSize="28" FontWeight="Medium" />
-            </StackPanel>
 
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Visibility="{Binding HasSearch, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibility}}">
-                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
-                    <pmscomponents:PMSIcon Width="16" Height="16" Source="{StaticResource SearchIcon}" />
-                    <Label Content="Search" FontWeight="Medium" />
+
+        <Grid Grid.Row="0" Margin="28,20,28,20">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+                <StackPanel Visibility="{Binding CanGoBack, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">
+                    <TextBlock>
+                     <Hyperlink Click="OnBackButtonClicked" TextDecorations="None">
+                         <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                             <pmscomponents:PMSIcon Width="18" Height="18" Source="{StaticResource ArrowLeftIcon}" />
+                             <Label Content="Back" VerticalAlignment="Center" FontSize="15" FontWeight="Medium" />
+                         </StackPanel>
+                     </Hyperlink>
+                    </TextBlock>
                 </StackPanel>
-                <TextBox Width="200" Height="20" Name="SearchBox" KeyDown="OnSearchBoxUpdated" KeyUp="OnSearchBoxUpdated" LostFocus="OnSearchBoxUpdated" TextChanged="OnSearchBoxUpdated" />
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Left" Orientation="Horizontal">
+                        <pmscomponents:PMSIcon Width="32" Height="32" Source="{Binding Icon}" />
+                        <Label Content="{Binding Title}" VerticalAlignment="Center" FontSize="28" FontWeight="Medium" />
+                    </StackPanel>
+
+                    <Grid Grid.Column="1">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Visibility="{Binding HasSearch, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">
+                            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                                <pmscomponents:PMSIcon Width="16" Height="16" Source="{StaticResource SearchIcon}" />
+                                <Label Content="Search" FontWeight="Medium" />
+                            </StackPanel>
+                            <TextBox Width="200" Height="20" Name="SearchBox" KeyDown="OnSearchBoxUpdated" KeyUp="OnSearchBoxUpdated" LostFocus="OnSearchBoxUpdated" TextChanged="OnSearchBoxUpdated" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Visibility="{Binding HasSave, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">
+                            <Button Click="OnSaveButtonClicked">Save changes</Button>
+                        </StackPanel>
+                    </Grid>
+                    
+                </Grid>
             </StackPanel>
         </Grid>
 

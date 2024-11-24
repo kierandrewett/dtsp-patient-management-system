@@ -3,6 +3,7 @@ using PMS.Controllers;
 using PMS.Dialogs;
 using PMS.Models;
 using PMS.Pages;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Media;
 using System.Reflection;
@@ -19,20 +20,58 @@ namespace PMS
         Scheduling,
         Registration,
         Users,
+        Edit
     }
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private TabController<WindowTab> TabsController;
+        public TabController<WindowTab> TabsController;
 
         private TabContent<WindowTab>[] Tabs = [];
 
         private WindowManager wm
         {
             get => (WindowManager)Application.Current.MainWindow;
+        }
+
+        public string WindowTitle
+        {
+            get {
+                string title = AppConstants.AppComputedTitle;
+
+                if (this.UnsavedChangesLock)
+                {
+                    title += " - (Unsaved changes)";
+                }
+
+                return title;
+            }
+        }
+
+        private bool _UnsavedChangesLock = false;
+
+        public bool UnsavedChangesLock
+        {
+            get => _UnsavedChangesLock;
+            set
+            {
+                _UnsavedChangesLock = value;
+
+                DidUpdateProperty("WindowTitle");
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public void DidUpdateProperty(string property)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(property));
+            }
         }
 
         public MainWindow()
@@ -44,7 +83,21 @@ namespace PMS
                 Debug.WriteLine($"(Main Window): Authorised as {user.Username}.");
             }
 
+            Closing += MainWindow_Closing;
+
             Init();
+
+            DataContext = this;
+        }
+
+        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Prevent the window from closing if we have unsaved changes
+            if (this.UnsavedChangesLock)
+            {
+                e.Cancel = !ChangesProtectionController.UnsavedChangesGuard();
+                return;
+            }
         }
 
         private void Init()
@@ -83,7 +136,7 @@ namespace PMS
                     "Users",
                     () => new WindowTabUsers(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
-                )
+                ),
             ];
 
             // Start tabs functionality sanity check

@@ -54,6 +54,20 @@ namespace PMS.Components
             set { SetValue(HasSearchProperty, value); }
         }
 
+        public static readonly DependencyProperty CanGoBackProperty = DependencyProperty.Register("CanGoBack", typeof(bool), typeof(PMSContentHeader));
+        public bool CanGoBack
+        {
+            get { return (bool)GetValue(CanGoBackProperty); }
+            set { SetValue(CanGoBackProperty, value); }
+        }
+
+        public static readonly DependencyProperty HasSaveProperty = DependencyProperty.Register("HasSave", typeof(bool), typeof(PMSContentHeader));
+        public bool HasSave
+        {
+            get { return (bool)GetValue(HasSaveProperty); }
+            set { SetValue(HasSaveProperty, value); }
+        }
+
         public string SearchBoxValue { get => SearchBox.Text.Trim(); }
 
         public static readonly RoutedEvent SearchBoxUpdatedEvent = EventManager.RegisterRoutedEvent("SearchBoxUpdated", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PMSContentHeader));
@@ -67,6 +81,32 @@ namespace PMS.Components
         private void OnSearchBoxUpdated(object sender, RoutedEventArgs e)
         {
             RaiseEvent(new RoutedEventArgs(SearchBoxUpdatedEvent));
+        }
+
+        public static readonly RoutedEvent BackButtonClickEvent = EventManager.RegisterRoutedEvent("BackButtonClick", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PMSContentHeader));
+
+        public event RoutedEventHandler BackButtonClick
+        {
+            add { AddHandler(BackButtonClickEvent, value); }
+            remove { RemoveHandler(BackButtonClickEvent, value); }
+        }
+
+        private void OnBackButtonClicked(object sender, RoutedEventArgs e)
+        {
+            RaiseEvent(new RoutedEventArgs(BackButtonClickEvent));
+        }
+
+        public static readonly RoutedEvent SaveButtonClickEvent = EventManager.RegisterRoutedEvent("SaveButtonClick", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PMSContentHeader));
+
+        public event RoutedEventHandler SaveButtonClick
+        {
+            add { AddHandler(SaveButtonClickEvent, value); }
+            remove { RemoveHandler(SaveButtonClickEvent, value); }
+        }
+
+        private void OnSaveButtonClicked(object sender, RoutedEventArgs e)
+        {
+            RaiseEvent(new RoutedEventArgs(SaveButtonClickEvent));
         }
     }
 }

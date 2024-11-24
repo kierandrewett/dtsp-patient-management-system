@@ -14,7 +14,7 @@ using System.Windows.Input;
 
 namespace PMS.Controllers
 {
-    internal class TabController<T>
+    public class TabController<T>
     {
         private MainWindow _Win;
 
@@ -32,11 +32,21 @@ namespace PMS.Controllers
             }
             set
             {
+                // Disallow tab changes if we have unsaved changes
+                if (
+                    this._Win.UnsavedChangesLock && 
+                    !ChangesProtectionController.UnsavedChangesGuard()
+                ) {
+                    return;
+                }
+
+                this._Win.UnsavedChangesLock = false;
+
                 // Update the internal value
                 _SelectedTab = value;
 
                 PaintTabItems();
-                PaintTabContent();
+                LoadContent(_SelectedTab.Name, _SelectedTab.RenderContent);
             }
         }
 
@@ -76,10 +86,10 @@ namespace PMS.Controllers
 
         }
 
-        private async void PaintTabContent()
+        public async void LoadContent(string name, Func<FrameworkElement> renderContent)
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            this._Win.StatusBar.StatusText = $"Loading {SelectedTab.Name}...";
+            this._Win.StatusBar.StatusText = $"Loading {name}...";
 
             this._TabsContent.Children.Clear();
 
@@ -90,16 +100,17 @@ namespace PMS.Controllers
             FrameworkElement Content = new WindowTabUnknown();
             try
             {
-                Content = SelectedTab.RenderContent();
-            } catch (Exception ex)
+                Content = renderContent();
+            }
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex);
                 MessageBox.Show(
-                    $"We're sorry, something went wrong while displaying this content.\n\nError: {ex.ToString()}", 
-                    "Error", 
-                    MessageBoxButton.OK, 
+                    $"We're sorry, something went wrong while displaying this content.\n\nError: {ex.ToString()}",
+                    "Error",
+                    MessageBoxButton.OK,
                     MessageBoxImage.Error
-                );   
+                );
             }
 
             this._TabsContent.Children.Add(Content);

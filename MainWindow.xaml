@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PMS"
         xmlns:pmscomponents="clr-namespace:PMS.Components"
         mc:Ignorable="d"
-        Title="{Binding Source={x:Static local:AppConstants.AppComputedTitle}}" Height="720" Width="1000" MinHeight="200" MinWidth="600" WindowStartupLocation="CenterScreen">
+        Title="{Binding WindowTitle}" Height="720" Width="1000" MinHeight="200" MinWidth="600" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="48"/>

@@ -1,35 +1,109 @@
 ﻿<UserControl x:Class="PMS.Components.PMSDataManager"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:PMS.Components"
-             xmlns:pmscomponents="clr-namespace:PMS.Components"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+	        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	        xmlns:local="clr-namespace:PMS.Components"
+	        xmlns:pmscomponents="clr-namespace:PMS.Components"
+            xmlns:converters="clr-namespace:PMS.Util.Converters"
+            mc:Ignorable="d" 
+            d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:BoolToVisibility x:Key="BoolToVisibility" />
+        <converters:NotBool x:Key="NotBool" />
+
+        <DataTemplate x:Key="DataGrid_EditButton">
+            <Button Click="OnDataItem_RequestEdit">Edit...</Button>
+        </DataTemplate>
+    </UserControl.Resources>
     <Grid Background="#f3f3f3">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-
         <pmscomponents:PMSContentHeader 
              Grid.Row="0" 
              x:Name="PanelHeader" 
              Title="{Binding PanelTitle, RelativeSource={RelativeSource AncestorType=UserControl}}" 
              Icon="{Binding PanelIcon, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-             HasSearch="True" 
-             SearchBoxUpdated="OnSearchBoxUpdated"
+             HasSearch="{Binding HasSearch, RelativeSource={RelativeSource AncestorType=UserControl}}"
+             HasSave="{Binding HasSave, RelativeSource={RelativeSource AncestorType=UserControl}}"
+             CanGoBack="{Binding CanGoBack, RelativeSource={RelativeSource AncestorType=UserControl}}"
+             SearchBoxUpdated="OnSearchBox_Updated"
+             BackButtonClick="OnBackButton_Click"
+             SaveButtonClick="OnSaveButton_Click"
         />
+        <Grid Grid.Row="2" Name="PanelDefault" Visibility="Hidden">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
 
-        <DockPanel Name="PanelContent" Grid.Row="2" LastChildFill="True">
-            <pmscomponents:PMSDataView 
-                 x:Name="PanelDataView"
-                 DataSource="{Binding DataSource, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                 Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
-             />
-        </DockPanel>
+            <Grid Grid.Row="0" Margin="28,16,28,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
 
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox Name="AllItemsSelectedCheckbox" IsThreeState="True" Margin="12,12,4,12" Click="OnSelectAllCheckBox_Click" />
+                    <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=Items.Count}" ContentStringFormat="‎{0} result(s) found" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Label Content="Tip: Shift + Click to select multiple." VerticalAlignment="Center" />
+                    <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                    <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestEditSelected_Click" />
+                </StackPanel>
+            </Grid>
+
+            <DataGrid
+                Grid.Row="1"
+                VerticalScrollBarVisibility="Visible" 
+                Padding="28,0,28,0" 
+                ItemsSource="{Binding ObservableDataSource}"
+                Name="DataGrid"
+                AutoGenerateColumns="False" 
+                SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
+                CurrentCellChanged="OnDataGrid_CurrentCellChanged"
+                IsReadOnly="True"
+                FrozenColumnCount="1"
+            >
+                <DataGrid.Columns>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Grid Grid.Row="2" Name="PanelEdit" Visibility="Hidden" Margin="28,16,28,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="1" Margin="0,16,0,16">
+                <StackPanel>
+                    <Label Content="ID" FontWeight="Bold" />
+                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
+                </StackPanel>
+
+                <StackPanel>
+                    <Label Content="ID" FontWeight="Bold" />
+                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
+                </StackPanel>
+
+                <StackPanel>
+                    <Label Content="ID" FontWeight="Bold" />
+                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
+                </StackPanel>
+
+                <StackPanel>
+                    <Label Content="ID" FontWeight="Bold" />
+                    <TextBox IsReadOnly="True" Text="PRS-010124-01" Margin="0,0,0,8" Padding="2,4,2,4"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>
