@@ -464,7 +464,6 @@ namespace PMS.Components
 
         private void EnterEditMode(DataItem[]? dataItems)
         {
-            Debug.WriteLine("Entering edit mode for: " + dataItems);
             SelectedPanel = DataManagerPanel.Edit;
             EditingDataItems = dataItems;
             EditingDataItemIndex = 0;
@@ -499,6 +498,44 @@ namespace PMS.Components
             }
         }
 
+        private void DeleteRecords(DataItem[] dataItems)
+        {
+            MessageBoxResult result = MessageBox.Show(
+                                        dataItems.Length > 1
+                                            ? $"Are you sure you want to permanently delete {dataItems.Length} items?"
+                                            : "Are you sure you want to permanently delete this record?",
+                                        "Confirm deletion",
+                                        MessageBoxButton.YesNo,
+                                        MessageBoxImage.Question
+                                    );
+            
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+            
+            foreach (DataItem dataItem in dataItems)
+            {
+                if (dataItem.Value is BaseModel model)
+                {
+                    AppDatabase.WriteModelDeletion(model);
+                }
+            }
+
+            Window parent = Window.GetWindow(this);
+
+            if (parent is MainWindow mainWindow)
+            {
+                mainWindow.TabsController.ReloadSelectedTab();
+            }
+        }
+
+        public void OnRequestDelete_Click(object sender, RoutedEventArgs e)
+        {
+
+            DeleteRecords(DataGrid.SelectedItems.Cast<DataItem>().ToArray());
+        }
+
         public void OnRequestEditSelected_Click(object sender, RoutedEventArgs e)
         {
             int numSelected = DataGrid.SelectedItems.Count;
@@ -516,8 +553,6 @@ namespace PMS.Components
                     return;
                 }
             }
-
-            Debug.WriteLine("Editing " + numSelected);
 
             EnterEditMode(DataGrid.SelectedItems.Cast<DataItem>().ToArray());
         }
@@ -632,7 +667,6 @@ namespace PMS.Components
 
         public async void OnSaveButton_Click(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine(sender);
             if (sender is PMSContentHeader header)
             {
                 Mouse.OverrideCursor = Cursors.Wait;

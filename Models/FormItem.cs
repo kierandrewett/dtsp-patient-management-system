@@ -92,7 +92,6 @@ namespace PMS.Models
 
         public void RegisterField(PMSContextualForm form, FrameworkElement widget)
         {
-            Debug.WriteLine("registering " + this + " " + widget);
             form.RegisterField(this, widget);
             RenderedWidget = widget;
         }
@@ -244,7 +243,6 @@ namespace PMS.Models
                 {
                     // https://stackoverflow.com/a/68438937
                     string text = textBox.Text.Insert(textBox.CaretIndex, e.Text);
-                    Debug.WriteLine(text);
                     e.Handled = !Pattern.IsMatch(text);
                 }
             }

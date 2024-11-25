@@ -55,7 +55,8 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
 
-                    <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestEditSelected_Click" />
+                    <Button Content="Delete selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestDelete_Click" Margin="0,0,4,0" />
+                    <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
                     <Button Content="Create new..." Click="OnRequestNew_Click" />
                 </StackPanel>
             </Grid>

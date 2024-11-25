@@ -154,7 +154,6 @@ namespace PMS.Models
         public string Address
         {
             get {
-                Debug.WriteLine("accessedf address");
                 if (_Address == null)
                 {
                     _Address = ID;

@@ -8,10 +8,23 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
 namespace PMS
 {
+    public class ModelMetadata
+    {
+        public string modelName;
+        public string modelTable;
+        public string modelPrimaryKey;
+
+        public string[] columnNames;
+        public string primaryKeyValueStr;
+        public bool isExistingRecord;
+    }
+
     public class AppDatabase
     {
         private static string CONNECTION_STRING = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=PMS.accdb";
@@ -73,7 +86,7 @@ namespace PMS
                 command.Parameters.AddWithValue("?", arg);
             }
 
-            Debug.WriteLine($"(Database): Executing query '{query}'...");
+            Debug.WriteLine($"(Database): Executing query '{Regex.Replace(query, "(\\n|\\r)", " ")}'...");
 
             return command.ExecuteReader();
         }
@@ -195,7 +208,7 @@ namespace PMS
             }
         }
 
-        public static int? WriteModelUpdate(BaseModel model)
+        public static ModelMetadata GetModelMetadata(BaseModel model)
         {
             string modelName = model.GetType().Name;
             string modelTable = model.ORM_TABLE;
@@ -243,27 +256,39 @@ namespace PMS
 
             bool isExistingRecord = matches > 0;
 
+            return new ModelMetadata() { 
+                modelName = modelName,
+                modelTable = modelTable,
+                modelPrimaryKey = modelPrimaryKey,
+
+                columnNames = columnNames, 
+                primaryKeyValueStr = primaryKeyValueStr, 
+                isExistingRecord = isExistingRecord 
+            };
+        }
+
+        public static int? WriteModelUpdate(BaseModel model)
+        {
+            ModelMetadata modelMetadata = AppDatabase.GetModelMetadata(model);
+
             Dictionary<string, string> columnValues = [];
 
             List<BaseModel> delegatedChildModels = [];
 
             foreach (PropertyInfo prop in model.GetType().GetProperties())
             {
-                Debug.WriteLine(prop.Name);
-
                 object? propValue = prop.GetValue(model);
 
                 // We can assume any child models are not going to be in the table schema
                 // check this before we continue to the skip props check.
                 if (propValue is BaseModel childModel)
                 {
-                    Debug.WriteLine($"PROP VALUE {prop.Name} IS A CHILD MODEL");
                     delegatedChildModels.Add(childModel);
                     continue;
                 }
 
                 // Skip props that aren't in the table schema
-                if (!columnNames.Contains(prop.Name))
+                if (!modelMetadata.columnNames.Contains(prop.Name))
                 {
                     continue;
                 }
@@ -273,7 +298,7 @@ namespace PMS
                     object castedValue = SerialiseValue(prop, propValue);
                     string castedValueStr = castedValue.ToString();
 
-                    if (!isExistingRecord || (isExistingRecord && castedValueStr != null && !castedValueStr.IsNullOrEmpty()))
+                    if (!modelMetadata.isExistingRecord || (modelMetadata.isExistingRecord && castedValueStr != null && !castedValueStr.IsNullOrEmpty()))
                     {
                         columnValues.Add(prop.Name, castedValueStr);
                     }
@@ -283,22 +308,22 @@ namespace PMS
             string query = "";
             List<string> queryArgs = [];
 
-            if (isExistingRecord)
+            if (modelMetadata.isExistingRecord)
             {
                 string columns = string.Join(", ", columnValues.Keys);
                 string[] values = columnValues.Values.ToArray();
                 string templatedValues = string.Join(", ", columnValues.Select(v => $"{v.Key} = ?"));
 
                 query =
-                    $"UPDATE {modelTable}" + "\n" +
+                    $"UPDATE {modelMetadata.modelTable}" + "\n" +
                     $"SET {templatedValues}" + "\n" +
-                    $"WHERE {modelPrimaryKey}=?";
+                    $"WHERE {modelMetadata.modelPrimaryKey}=?";
 
                 // Add values
                 queryArgs.AddRange(values);
 
                 // Add primary key to query args for update look up
-                queryArgs.Add(primaryKeyValueStr);
+                queryArgs.Add(modelMetadata.primaryKeyValueStr);
             }
             else
             {
@@ -307,17 +332,23 @@ namespace PMS
                 string templatedValues = string.Join(", ", values.Select(v => "?"));
 
                 query =
-                    $"INSERT INTO {modelTable} ({columns})" + "\n" +
+                    $"INSERT INTO {modelMetadata.modelTable} ({columns})" + "\n" +
                     $"VALUES ({templatedValues})";
 
                 // Add values
                 queryArgs.AddRange(values);
             }
 
-            Debug.WriteLine(query);
-            for (int i = 0; i < queryArgs.Count; i++)
+            //for (int i = 0; i < queryArgs.Count; i++)
+            //{
+            //    Debug.WriteLine(i + ": " + queryArgs[i]);
+            //}
+
+            // This will likely fail due to relationships
+            // Try it anyway as it fixes any race conditions
+            foreach (BaseModel childModel in delegatedChildModels)
             {
-                Debug.WriteLine(i + ": " + queryArgs[i]);
+                AppDatabase.WriteModelUpdate(childModel);
             }
 
             int? rowsAffected = AppDatabase.Update(
@@ -342,6 +373,17 @@ namespace PMS
             {
                 return rowsAffected;
             }
+        }
+
+        public static int? WriteModelDeletion(BaseModel model)
+        {
+            ModelMetadata modelMetadata = AppDatabase.GetModelMetadata(model);
+
+            return AppDatabase.Update(
+                $"DELETE FROM {modelMetadata.modelTable}" + "\n" +
+                $"WHERE {modelMetadata.modelPrimaryKey} = ?",
+                [modelMetadata.primaryKeyValueStr]
+            );
         }
     }
 }

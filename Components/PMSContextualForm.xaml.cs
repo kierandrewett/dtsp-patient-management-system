@@ -58,8 +58,6 @@ namespace PMS.Components
 
         public bool SubmitForm()
         {
-            Debug.WriteLine("Attempting to submit form");
-
             if (CanSubmitForm())
             {
                 return true;
