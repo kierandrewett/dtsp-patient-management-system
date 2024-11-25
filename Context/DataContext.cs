@@ -9,6 +9,7 @@ namespace PMS.Context
 {
     public class DataContext<T>
     {
+        public Type Model { get; set; }
         public T[] DataSource { get; set; }
         public Dictionary<string, string> Columns { get; set; }
         public FormItemBase[] Form { get; set; }

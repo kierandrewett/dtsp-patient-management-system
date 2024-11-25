@@ -53,7 +53,7 @@ namespace PMS.Models
             }
         }
 
-        public Func<object> DefaultValue;
+        public Func<PMSContextualForm, object> DefaultValue;
 
         private bool _Required;
         public bool Required
@@ -63,6 +63,28 @@ namespace PMS.Models
             {
                 _Required = value;
                 DidUpdateProperty("Required");
+            }
+        }
+
+        private bool _Hidden;
+        public bool Hidden
+        {
+            get => _Hidden;
+            set
+            {
+                _Hidden = value;
+                DidUpdateProperty("Hidden");
+            }
+        }
+
+        private double _MaxWidth = double.PositiveInfinity;
+        public double MaxWidth
+        {
+            get => _MaxWidth;
+            set
+            {
+                _MaxWidth = value;
+                DidUpdateProperty("MaxWidth");
             }
         }
 
@@ -87,6 +109,11 @@ namespace PMS.Models
                 return "No rendered widget.";
             }
 
+            return null;
+        }
+
+        public virtual object? GetValue()
+        {
             return null;
         }
 
@@ -126,6 +153,8 @@ namespace PMS.Models
                 sp.Children.Add(item);
             }
 
+            sp.Visibility = Hidden ? Visibility.Collapsed : Visibility.Visible;
+
             return sp;
         }
     }
@@ -163,6 +192,10 @@ namespace PMS.Models
 
             return null;
         }
+        public override string? GetValue()
+        {
+            return ((TextBox)RenderedWidget).Text;
+        }
 
         public override FrameworkElement Render(PMSContextualForm form, DataItem? dataItem)
         {
@@ -174,10 +207,11 @@ namespace PMS.Models
             // Begin binding
             widget.IsReadOnly = IsReadOnly;
             widget.IsEnabled = !IsReadOnly;
+            widget.MaxWidth = MaxWidth;
 
             Binding textBinding = new Binding($"{DataBinding}")
             {
-                FallbackValue = DefaultValue != null ? DefaultValue() : "",
+                FallbackValue = DefaultValue != null ? DefaultValue(form) : "",
                 Mode = BindingMode.OneTime
             };
 
@@ -250,6 +284,11 @@ namespace PMS.Models
             return null;
         }
 
+        public override object? GetValue()
+        {
+            return ((ComboBox)RenderedWidget).SelectedValue;
+        }
+
         public override FrameworkElement Render(PMSContextualForm form, DataItem? dataItem)
         {
             TextBlock label = RenderLabel();
@@ -260,6 +299,7 @@ namespace PMS.Models
             // Begin binding
             widget.IsReadOnly = IsReadOnly;
             widget.IsEnabled = !IsReadOnly;
+            widget.MaxWidth = MaxWidth;
 
             // Ensure we bind to the Key and Value props on dictionary
             widget.ItemsSource = Options;
@@ -268,7 +308,7 @@ namespace PMS.Models
             
             Binding valueBinding = new Binding($"{DataBinding}")
             {
-                FallbackValue = DefaultValue != null ? DefaultValue() : null,
+                FallbackValue = DefaultValue != null ? DefaultValue(form) : null,
                 Mode = BindingMode.OneTime
             };
 
@@ -284,9 +324,10 @@ namespace PMS.Models
     {
         public List<FormItemBase> Items { get; set; }
 
-        public FormItemGroup(params FormItemBase[] items)
+        public FormItemGroup(FormItemBase[] items, string? label = null)
         {
             Items = new List<FormItemBase>(items);
+            Label = label;
         }
 
         public override FrameworkElement Render(PMSContextualForm form, DataItem? dataItem)
@@ -300,7 +341,11 @@ namespace PMS.Models
                 FormItemBase item = Items[i];
                 FrameworkElement rendered = item.Render(form, dataItem);
 
-                grid.ColumnDefinitions.Add(new ColumnDefinition());
+                ColumnDefinition colDef = item.MaxWidth == double.PositiveInfinity
+                    ? new ColumnDefinition()
+                    : new ColumnDefinition { Width = new GridLength(item.MaxWidth) };
+
+                grid.ColumnDefinitions.Add(colDef);
                 Grid.SetColumn(rendered, i * 2);
                 grid.Children.Add(rendered);
 
@@ -310,7 +355,14 @@ namespace PMS.Models
                 }
             }
 
-            return RenderFinal([grid]);
+            List<FrameworkElement> items = new List<FrameworkElement> { grid };
+
+            if (Label != null)
+            {
+                items.Insert(0, RenderLabel());
+            }
+
+            return RenderFinal(items.ToArray());
         }
     }
 
@@ -346,6 +398,11 @@ namespace PMS.Models
             return null;
         }
 
+        public override object? GetValue()
+        {
+            return ((DatePicker)RenderedWidget).SelectedDate;
+        }
+
         public override FrameworkElement Render(PMSContextualForm form, DataItem? dataItem)
         {
             TextBlock label = RenderLabel();
@@ -356,10 +413,11 @@ namespace PMS.Models
             // Begin binding
             widget.IsEnabled = !IsReadOnly;
             widget.SelectedDateFormat = DatePickerFormat;
+            widget.MaxWidth = MaxWidth;
 
             Binding valueBinding = new Binding($"{DataBinding}")
             {
-                FallbackValue = DefaultValue != null ? DefaultValue() : null,
+                FallbackValue = DefaultValue != null ? DefaultValue(form) : null,
                 Mode = BindingMode.OneTime
             };
 

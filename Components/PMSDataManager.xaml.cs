@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Media;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -98,6 +99,14 @@ namespace PMS.Components
         {
             get { return (FormItemBase[])GetValue(FormProperty); }
             set { SetValue(FormProperty, value); }
+        }
+
+        public static readonly DependencyProperty ModelProperty = DependencyProperty.Register("Model", typeof(Type), typeof(PMSDataManager));
+
+        public Type Model
+        {
+            get { return (Type)GetValue(ModelProperty); }
+            set { SetValue(ModelProperty, value); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -513,6 +522,109 @@ namespace PMS.Components
             EnterEditMode(DataGrid.SelectedItems.Cast<DataItem>().ToArray());
         }
 
+        private void SaveRecordToDatabase()
+        {
+            if (DataForm?.RegisteredFields != null)
+            {
+                bool createNewRecord = EditingDataItem == null;
+
+                BaseModel? modelInstance = (BaseModel?)Activator.CreateInstance(Model);
+
+                if (modelInstance != null || modelInstance is BaseModel)
+                {
+
+                    foreach (var field in DataForm.RegisteredFields.Keys)
+                    {
+                        PropertyInfo? property = null;
+                        object currentInstance = modelInstance;
+
+                        // Split the data binding
+                        // Sometimes we have cases like ComputedAddress.Postcode
+                        // Reflection is unable to handle the resolution of such
+                        // keys, therefore we must split it and handle the creation
+                        // of each substring (as ComputedAddress may not exist).
+                        string[] split = field.DataBinding.Split(".");
+
+                        for (int i = 0; i < split.Length; i++)
+                        {
+                            string modelName = currentInstance.GetType().Name;
+
+                            string key = split[i];
+                            bool isLastKey = (i + 1) >= split.Length;
+
+                            property = currentInstance.GetType().GetProperty(key);
+
+                            if (property == null || !property.CanWrite)
+                            {
+                                Debug.WriteLine($"(Data Manager): Property '{key}' not found or not-writable on model '{modelName}', skipping...");
+                                continue;
+                            }
+
+                            if (isLastKey)
+                            {
+                                object? propertyValue = field.GetValue();
+                                Debug.WriteLine($"(Data Manager): Setting property on model '{modelName}': {property.Name}: {property.PropertyType} = {propertyValue}");
+
+                                property.SetValue(
+                                    currentInstance,
+                                    Convert.ChangeType(propertyValue, property.PropertyType)
+                                );
+                            }
+                            else
+                            {
+                                // Handle cases where we need to create sub-instances
+                                object? nestedInstance = property.GetValue(currentInstance);
+
+                                if (nestedInstance == null)
+                                {
+                                    nestedInstance = Activator.CreateInstance(property.PropertyType);
+                                    property.SetValue(
+                                        currentInstance,
+                                        nestedInstance
+                                    );
+                                }
+
+                                currentInstance = nestedInstance;
+                            }
+                        }
+                    }
+
+                    int? rowsAffected = AppDatabase.WriteModelUpdate(modelInstance);
+
+                    if (rowsAffected == null || rowsAffected < 0)
+                    {
+                        throw new Exception("No rows were affected.");
+                    }
+
+                    return;
+                } else
+                {
+                    Debug.WriteLine($"(Data Manager): Model is not a valid BaseModel type.");
+                }
+            }
+        }
+
+        private bool SafeSaveRecordToDatabase()
+        {
+            try
+            {
+                SaveRecordToDatabase();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Failed to save record.\n\n{ex.ToString()}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+
+                return false;
+            }
+
+            return true;
+        }
+
         public void OnRequestNew_Click(object sender, RoutedEventArgs e)
         {
             EnterEditMode(null);
@@ -537,7 +649,7 @@ namespace PMS.Components
                     EditingDataItems.Length > 1 &&
                     (EditingDataItemIndex + 1) < EditingDataItems.Length)
                 {
-                    if (DataForm.SubmitForm())
+                    if (DataForm.SubmitForm() && SafeSaveRecordToDatabase())
                     {
                         EditingDataItemIndex++;
                         DidUpdateProperty("EditingDataItem");
@@ -547,7 +659,7 @@ namespace PMS.Components
                         SystemSounds.Asterisk.Play();
                     }
                 }
-                else if (DataForm.SubmitForm())
+                else if (DataForm.SubmitForm() && SafeSaveRecordToDatabase())
                 {
                     // Otherwise, we can assume we have exhausted the list
                     // OR: we are creating a new record

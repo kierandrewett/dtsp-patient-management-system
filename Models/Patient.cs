@@ -2,6 +2,7 @@
 using PMS.Util;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Windows.Controls;
 
 namespace PMS.Models
@@ -13,8 +14,11 @@ namespace PMS.Models
         Female
     }
 
-    public class PatientAddress : PropertyObservable
+    public class PatientAddress : BaseModel
     {
+        public override string ORM_TABLE => "tblAddress";
+        public override string ORM_PRIMARY_KEY => "PatientID";
+
         protected string _PatientID;
         public string PatientID
         {
@@ -84,6 +88,9 @@ namespace PMS.Models
 
     public class Patient : Person<string>
     {
+        public override string ORM_TABLE => "tblPatient";
+        public override string ORM_PRIMARY_KEY => "ID";
+
         protected PatientGender _Gender;
         public PatientGender Gender
         {
@@ -146,7 +153,15 @@ namespace PMS.Models
         protected string _Address;
         public string Address
         {
-            get { return _Address; }
+            get {
+                Debug.WriteLine("accessedf address");
+                if (_Address == null)
+                {
+                    _Address = ID;
+                    return ID;
+                }
+                return _Address; 
+            }
             set
             {
                 _Address = value;
@@ -157,23 +172,21 @@ namespace PMS.Models
         protected PatientAddress? _ComputedAddress;
         public PatientAddress? ComputedAddress
         {
-            get
+            get => _ComputedAddress;
+            set
             {
-                if (_ComputedAddress == null)
-                {
-                    _ComputedAddress = AppDatabase.QueryFirst<PatientAddress>(
-                        "SELECT * FROM tblAddress WHERE PatientID=?",
-                        [Address]
-                    );
-                }
-
-                return _ComputedAddress;
+                _ComputedAddress = value;
             }
         }
 
         public string? ReadableAddress
         { 
             get {
+                this._ComputedAddress = AppDatabase.QueryFirst<PatientAddress>(
+                    "SELECT * FROM tblAddress WHERE PatientID=?",
+                    [Address]
+                );
+
                 string formattedPostcode = ComputedAddress?.Postcode;
 
                 try

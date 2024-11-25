@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PMS.Models
 {
-    public class Person<T> : PropertyObservable
+    public class Person<T> : BaseModel
     {
         protected T _ID;
         public T ID

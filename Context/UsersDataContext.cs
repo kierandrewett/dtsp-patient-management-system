@@ -11,11 +11,13 @@ namespace PMS.Context
     {
         public UsersDataContext()
         {
+            Model = typeof(User);
             DataSource = User.GetAllUsers() ?? Array.Empty<User>();
             Columns = new()
             {
                 // "Model Property" - "Column Display Name"
                 { "ID", "ID" },
+                { "Title", "Title" },
                 { "Username", "Username" },
                 { "Forenames", "Forename(s)" },
                 { "Surname", "Surname" },
