@@ -24,7 +24,7 @@ namespace PMS.Components
     /// <summary>
     /// Interaction logic for PMSContentHeader.xaml
     /// </summary>
-    public partial class PMSContentHeader : UserControl
+    public partial class PMSContentHeader : UserControl, INotifyPropertyChanged
     {
         public PMSContentHeader()
         {
@@ -65,7 +65,10 @@ namespace PMS.Components
         public bool HasSave
         {
             get { return (bool)GetValue(HasSaveProperty); }
-            set { SetValue(HasSaveProperty, value); }
+            set { 
+                SetValue(HasSaveProperty, value);
+                DidUpdateProperty("HasSave");
+            }
         }
 
         public string SearchBoxValue { get => SearchBox.Text.Trim(); }
@@ -97,6 +100,16 @@ namespace PMS.Components
         }
 
         public static readonly RoutedEvent SaveButtonClickEvent = EventManager.RegisterRoutedEvent("SaveButtonClick", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PMSContentHeader));
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public void DidUpdateProperty(string property)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(property));
+            }
+        }
 
         public event RoutedEventHandler SaveButtonClick
         {

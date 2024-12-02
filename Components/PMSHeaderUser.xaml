@@ -18,11 +18,12 @@
     <Button 
             Background="{x:Null}" 
             Foreground="{x:Null}" 
-            Padding="12,0,4,0" 
-            BorderBrush="{x:Null}" Click="Button_Click">
+            BorderBrush="{x:Null}" 
+            Padding="12,0,4,0"
+        Click="Button_Click">
         <StackPanel Orientation="Horizontal">
             <local:PMSIcon Width="16" Height="16" Fill="White" Source="{StaticResource PersonIcon}" />
-            <Label x:Name="label" Grid.Column="1" VerticalAlignment="Center" Foreground="White" Content="{Binding UserFullName}"/>
+            <Label VerticalAlignment="Center" Foreground="White" Content="{Binding UserFullName}" />
         </StackPanel>
     </Button>
     

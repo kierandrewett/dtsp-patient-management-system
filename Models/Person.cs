@@ -52,5 +52,20 @@ namespace PMS.Models
                 DidUpdateProperty("Surname");
             }
         }
+
+        public string FormatFullName()
+        {
+            List<string> nameParts = new();
+
+            if (this.Title != Title.None)
+            {
+                nameParts.Add(this.Title + ".");
+            }
+
+            nameParts.Add(this.Forenames);
+            nameParts.Add(this.Surname);
+
+            return string.Join(" ", nameParts);
+        }
     }
 }

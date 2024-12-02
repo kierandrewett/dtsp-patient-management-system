@@ -10,10 +10,15 @@
             d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:BoolToVisibility x:Key="BoolToVisibility" />
+        <converters:BoolToVisibilityCollapsed x:Key="BoolToVisibilityCollapsed" />
         <converters:NotBool x:Key="NotBool" />
 
         <DataTemplate x:Key="DataGrid_EditButton">
-            <Button Click="OnDataItem_RequestEdit">Edit...</Button>
+            <Button Click="OnDataItem_RequestEdit">Edit record...</Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DataGrid_ViewButton">
+            <Button Click="OnDataItem_RequestEdit">View record...</Button>
         </DataTemplate>
     </UserControl.Resources>
     <Grid Background="#f3f3f3">
@@ -49,36 +54,32 @@
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <CheckBox Name="AllItemsSelectedCheckbox" IsThreeState="True" Margin="12,12,4,12" Click="OnSelectAllCheckBox_Click" />
-                    <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=Items.Count}" ContentStringFormat="‎{0} result(s) found" VerticalAlignment="Center" />
+                    <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=InnerDataGrid.Items.Count}" ContentStringFormat="‎{0} result(s) found" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=InnerDataGrid.SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
 
-                    <Button Content="Delete selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestDelete_Click" Margin="0,0,4,0" />
-                    <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
-                    <Button Content="Create new..." Click="OnRequestNew_Click" />
+                    <Button Content="View selected..." IsEnabled="{Binding HasSelectedItems}" Visibility="{Binding CanView, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
+                    <Button Content="Delete selected..." Background="{StaticResource BtnBackgroundDangerBrush}" Visibility="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" IsEnabled="{Binding HasSelectedItems}" Click="OnRequestDelete_Click" Margin="0,0,4,0" />
+                    <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Visibility="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
+                    <Button Content="Create new..."  IsEnabled="{Binding CanCreate}" Visibility="{Binding CanCreate, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestNew_Click" />
                 </StackPanel>
             </Grid>
 
             <Label Grid.Row="1" Margin="28,-10,28,10" >Tip: Shift + Click to select multiple.</Label>
 
-            <DataGrid
+            <pmscomponents:PMSDataGrid 
+                x:Name="DataGrid"
                 Grid.Row="2"
-                VerticalScrollBarVisibility="Visible" 
                 Padding="28,0,28,0" 
-                ItemsSource="{Binding ObservableDataSource}"
-                Name="DataGrid"
-                AutoGenerateColumns="False" 
+                DataSource="{Binding ObservableDataSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
                 CurrentCellChanged="OnDataGrid_CurrentCellChanged"
-                IsReadOnly="True"
-                FrozenColumnCount="1"
+                DataItemDoubleClick="OnDataItem_RequestEdit"
             >
-                <DataGrid.Columns>
 
-                </DataGrid.Columns>
-            </DataGrid>
+            </pmscomponents:PMSDataGrid>
             
             
         </Grid>
@@ -93,7 +94,12 @@
                 <pmscomponents:PMSContextualForm 
                     x:Name="DataForm" 
                     Schema="{Binding Form, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    DataSource="{Binding EditingDataItem, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    DataSource="{Binding EditingDataItem, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    DataSourceIdx="{Binding EditingDataItemIndex, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    DataSourceCount="{Binding EditingDataItems.Count, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CanEdit="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                    RequestPrevious="OnForm_RequestPreviousRecord" 
+                    RequestNext="OnForm_RequestNextRecord" />
             </ScrollViewer>
         </Grid>
     </Grid>

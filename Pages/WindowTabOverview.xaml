@@ -4,10 +4,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PMS.Pages"
+             xmlns:pmscomponents="clr-namespace:PMS.Components"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <Label Content="Overview tab" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="32"/>
-
+    <Grid Background="#f3f3f3">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <pmscomponents:PMSContentHeader 
+             Grid.Row="0" 
+             Title="Overview" 
+             Icon="{StaticResource HomeIcon}" 
+        />
     </Grid>
 </UserControl>

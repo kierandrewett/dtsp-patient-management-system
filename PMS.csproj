@@ -62,6 +62,9 @@
     <Compile Update="Pages\WindowTabUnknown - Copy.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Pages\WindowTabUsers - Copy.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
 </Project>

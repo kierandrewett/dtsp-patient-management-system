@@ -47,6 +47,10 @@ namespace PMS
                 // Convert enum to its integer representation
                 return Convert.ChangeType(value, Enum.GetUnderlyingType(property.PropertyType));
             }
+            else if (property.PropertyType == typeof(bool))
+            {
+                return Convert.ToInt16(value);
+            }
             else
             {
                 return Convert.ChangeType(value, property.PropertyType);
@@ -79,6 +83,8 @@ namespace PMS
 
         public static OleDbDataReader ExecuteQuery(OleDbConnection conn, string query, string[] args)
         {
+            query = Regex.Replace(query, "(\\n|\\r)", " ");
+
             OleDbCommand command = new OleDbCommand(query, conn);
 
             foreach (string arg in args)
@@ -86,7 +92,7 @@ namespace PMS
                 command.Parameters.AddWithValue("?", arg);
             }
 
-            Debug.WriteLine($"(Database): Executing query '{Regex.Replace(query, "(\\n|\\r)", " ")}'...");
+            Debug.WriteLine($"(Database): Executing query '{query}'...");
 
             return command.ExecuteReader();
         }
@@ -312,12 +318,12 @@ namespace PMS
             {
                 string columns = string.Join(", ", columnValues.Keys);
                 string[] values = columnValues.Values.ToArray();
-                string templatedValues = string.Join(", ", columnValues.Select(v => $"{v.Key} = ?"));
+                string templatedValues = string.Join(", ", columnValues.Select(v => $"[{v.Key}] = ?"));
 
                 query =
                     $"UPDATE {modelMetadata.modelTable}" + "\n" +
                     $"SET {templatedValues}" + "\n" +
-                    $"WHERE {modelMetadata.modelPrimaryKey}=?";
+                    $"WHERE {modelMetadata.modelPrimaryKey} = ?";
 
                 // Add values
                 queryArgs.AddRange(values);
@@ -327,7 +333,7 @@ namespace PMS
             }
             else
             {
-                string columns = string.Join(", ", columnValues.Keys);
+                string columns = string.Join(", ", columnValues.Keys.Select(c => $"[{c}]"));
                 string[] values = columnValues.Values.ToArray();
                 string templatedValues = string.Join(", ", values.Select(v => "?"));
 
@@ -339,10 +345,10 @@ namespace PMS
                 queryArgs.AddRange(values);
             }
 
-            //for (int i = 0; i < queryArgs.Count; i++)
-            //{
-            //    Debug.WriteLine(i + ": " + queryArgs[i]);
-            //}
+            for (int i = 0; i < queryArgs.Count; i++)
+            {
+                Debug.WriteLine(i + ": " + queryArgs[i]);
+            }
 
             // This will likely fail due to relationships
             // Try it anyway as it fixes any race conditions

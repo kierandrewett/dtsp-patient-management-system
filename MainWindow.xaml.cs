@@ -122,13 +122,7 @@ namespace PMS
                 new TabContent<WindowTab>(
                     WindowTab.Scheduling,
                     "Scheduling",
-                    () => new WindowTabUnknown(),
-                    (tab) => PermissionController.CanAccessTabContent(user, tab) != null
-                ),
-                new TabContent<WindowTab>(
-                    WindowTab.Registration,
-                    "Registration",
-                    () => new WindowTabUnknown(),
+                    () => new WindowTabScheduling(),
                     (tab) => PermissionController.CanAccessTabContent(user, tab) != null
                 ),
                 new TabContent<WindowTab>(

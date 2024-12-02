@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PMS.Components"
              xmlns:converters="clr-namespace:PMS.Util.Converters"
+             xmlns:pmscomponents="clr-namespace:PMS.Components"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -14,13 +15,32 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
-
         </Grid.RowDefinitions>
 
-        <Label Name="FormState" Grid.Row="0" FontWeight="Bold" FontStyle="Italic">
-            
-        </Label>
-        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" Grid.Column="0">
+                <Button FontWeight="Bold" Click="OnPreviousRecord_Click" IsEnabled="{Binding CanGoBack, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <pmscomponents:PMSIcon Source="{StaticResource ArrowLeftIcon}" Height="16" Width="16" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                </Button>
+                <Button FontWeight="Bold" Click="OnNextRecord_Click" IsEnabled="{Binding CanGoForward, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0,8,0">
+                    <pmscomponents:PMSIcon Source="{StaticResource ArrowRightIcon}" Height="16" Width="16" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                </Button>
+                <Label Name="FormNumber" FontWeight="Bold"></Label>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Name="FormState" Grid.Column="1" HorizontalAlignment="Right">
+                <pmscomponents:PMSIcon x:Name="FormStateLock" Visibility="Collapsed" Source="{StaticResource LockIcon}" Height="24" Width="16" Fill="#968200" />
+                <pmscomponents:PMSIcon x:Name="FormStateAdd" Visibility="Collapsed" Source="{StaticResource AddIcon}" Height="24" Width="16" />
+                <pmscomponents:PMSIcon x:Name="FormStateEdit" Visibility="Collapsed" Source="{StaticResource EditIcon}" Height="24" Width="16" />
+
+                <Label Name="FormStateText" FontWeight="Bold" FontStyle="Italic"></Label>
+            </StackPanel>
+        </Grid>
+
         <StackPanel Grid.Row="1" Name="RenderedForm" Orientation="Vertical" HorizontalAlignment="Stretch">
 
         </StackPanel>

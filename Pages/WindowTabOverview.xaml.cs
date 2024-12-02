@@ -30,5 +30,9 @@ namespace PMS.Pages
             get => (WindowManager)Application.Current.MainWindow;
         }
 
+        public string UserFullName
+        {
+            get => wm.AuthorisedUser?.FormatFullName() ?? "Nobody";
+        }
     }
 }

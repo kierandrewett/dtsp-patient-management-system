@@ -113,7 +113,7 @@ namespace PMS.Dialogs
                     User user = users[userIndex];
 
                     UsernameField.Text = user.Username;
-                    PasswordField.Password = user.Password;
+                    PasswordField.Password = "debug";
                     SignIn_Click(sender, e);
                 } else
                 {

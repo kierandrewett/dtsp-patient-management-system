@@ -19,8 +19,6 @@
             <RowDefinition Height="1" />
         </Grid.RowDefinitions>
 
-
-
         <Grid Grid.Row="0" Margin="28,20,28,20">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                 <StackPanel Visibility="{Binding CanGoBack, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">
@@ -51,7 +49,7 @@
                                 <pmscomponents:PMSIcon Width="16" Height="16" Source="{StaticResource SearchIcon}" />
                                 <Label Content="Search" FontWeight="Medium" />
                             </StackPanel>
-                            <TextBox Width="200" Height="20" Name="SearchBox" KeyDown="OnSearchBoxUpdated" KeyUp="OnSearchBoxUpdated" LostFocus="OnSearchBoxUpdated" TextChanged="OnSearchBoxUpdated" />
+                            <TextBox Width="200" Height="20" Name="SearchBox" TextInput="OnSearchBoxUpdated" LostFocus="OnSearchBoxUpdated" TextChanged="OnSearchBoxUpdated" />
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Visibility="{Binding HasSave, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">

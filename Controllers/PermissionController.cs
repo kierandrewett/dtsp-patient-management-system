@@ -2,6 +2,7 @@
 using PMS.Util;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,6 +83,7 @@ namespace PMS.Controllers
                         return user;
                     }
 
+         
                     break;
                 case WindowTab.Scheduling:
                     if (
@@ -93,11 +95,44 @@ namespace PMS.Controllers
                     }
 
                     break;
+                case WindowTab.Users:
+                    if (userType == UserType.Admin)
+                    {
+                        return user;
+                    }
+
+                    break;
                 default:
                     return user;
             }
 
             return null;
+        }
+
+        public static User? CanEditRecord(User user, Type model)
+        {
+            if (model.Equals(typeof (Patient)))
+            {
+                // 2.3: Only doctors and nurses can edit the full patient record
+                return user.UserType == UserType.Doctor || user.UserType == UserType.Nurse
+                        ? user
+                        : null;
+            }
+
+            return user;
+        }
+
+        public static User? CanCreateRecord(User user, Type model)
+        {
+            if (model.Equals(typeof(Patient)))
+            {
+                // 2.1: Only admins and nurses can add new patients 
+                return user.UserType == UserType.Admin || user.UserType == UserType.Nurse
+                        ? user
+                        : null;
+            }
+
+            return user;
         }
     }
 }

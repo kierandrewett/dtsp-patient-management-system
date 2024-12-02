@@ -113,6 +113,11 @@ namespace PMS.Models
             }
         }
 
+        public string FormattedDateOfBirth
+        {
+            get => DateHelper.ConvertToString(DateOfBirth, false);
+        }
+
         protected DateTime _DateCreated;
         public DateTime DateCreated
         {
@@ -122,6 +127,11 @@ namespace PMS.Models
                 _DateCreated = value;
                 DidUpdateProperty("DateCreated");
             }
+        }
+
+        public string FormattedDateCreated
+        {
+            get => DateHelper.ConvertToString(DateCreated, false);
         }
 
         protected string _NHSNumber;
@@ -181,7 +191,7 @@ namespace PMS.Models
         public string? ReadableAddress
         { 
             get {
-                this._ComputedAddress = AppDatabase.QueryFirst<PatientAddress>(
+                this._ComputedAddress ??= AppDatabase.QueryFirst<PatientAddress>(
                     "SELECT * FROM tblAddress WHERE PatientID=?",
                     [Address]
                 );
@@ -278,7 +288,38 @@ namespace PMS.Models
             }
         }
 
-        public Doctor? Doctor => Doctor.GetByDoctorID(DoctorID);
+        private User? _Doctor;
+        public User? Doctor
+        {
+            get
+            {
+                if (_Doctor == null)
+                {
+                    User? user = User.GetUserByID(DoctorID);
+
+                    if (user?.UserType == UserType.Doctor)
+                    {
+                        _Doctor = user;
+                    }
+                }
+
+                return _Doctor;
+            }
+        }
+
+        public string DoctorFullName
+        {
+            get
+            {
+                if (Doctor != null)
+                {
+                    return Doctor.FormatFullName();
+                }
+
+                return "";
+            }
+        }
+
         public static Patient[]? GetAllPatients()
         {
             return AppDatabase.QueryAll<Patient>(
@@ -299,8 +340,9 @@ namespace PMS.Models
 
             string paddedDay = dt.Day.ToString().PadLeft(2, '0');
             string paddedMonth = dt.Month.ToString().PadLeft(2, '0');
+            string year = (dt.Year % 100).ToString(); // modulo 100 of 2024 returns the last 2 digits = 24
 
-            string formattedDate = $"{paddedDay}{paddedMonth}{dt.Year}";
+            string formattedDate = $"{paddedDay}{paddedMonth}{year}";
 
             string nextSequence = (currentSequence + 1).ToString().PadLeft(2, '0');
 
@@ -332,6 +374,33 @@ namespace PMS.Models
             }
 
             return genders;
+        }
+
+        public static Patient? GetPatientByID(string id)
+        {
+            return AppDatabase.QueryFirst<Patient>(
+                "SELECT * FROM tblPatient WHERE ID=?",
+                [id]
+            );
+        }
+        public static Dictionary<string, string> GetAllPatientOptions()
+        {
+            Dictionary<string, string> patients = new() { };
+
+            Patient[]? databasePatients = Patient.GetAllPatients();
+
+            if (databasePatients != null)
+            {
+                foreach (Patient patientObj in databasePatients)
+                {
+                    patients.Add(
+                        patientObj.ID,
+                        patientObj.FormatFullName()
+                    );
+                }
+            }
+
+            return patients;
         }
     }
 }

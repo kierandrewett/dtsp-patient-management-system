@@ -25,33 +25,11 @@ namespace PMS.Components
         {
             get => ((WindowManager)Application.Current.MainWindow).AuthorisedUser;
             set => ((WindowManager) Application.Current.MainWindow).AuthorisedUser = value;
-    }
-
-        public string FormatUserFullName()
-        {
-            if (User is User)
-            {
-                List<string> nameParts = new();
-
-                if (User.Title != Title.None)
-                {
-                    nameParts.Add(User.Title + ".");
-                }
-
-                nameParts.Add(User.Forenames);
-                nameParts.Add(User.Surname);
-
-                return string.Join(" ", nameParts);
-            }
-            else
-            {
-                return "Nobody";
-            }
         }
 
         public string UserFullName
         {
-            get => FormatUserFullName();
+            get => User?.FormatFullName() ?? "Nobody";
         }
 
         public string UserRole

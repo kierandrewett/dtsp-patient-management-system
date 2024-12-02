@@ -25,20 +25,35 @@ namespace PMS.Context
                 { "Forenames", "Forename(s)" },
                 { "Surname", "Surname" },
                 { "Gender", "Gender" },
-                { "DateOfBirth", "Date of Birth" },
+                { "FormattedDateOfBirth", "Date of Birth" },
+                { "DateOfBirth", "_Date of Birth" }, // Prefixed with _ to hide, purely here for better search indexing
                 { "ReadableAddress", "Address" },
                 { "FormattedNHSNumber", "NHS Number" },
                 { "FormattedMobilePhoneNumber", "Mobile Number" },
                 { "FormattedLandlinePhoneNumber", "Landline Number" },
-                { "DateCreated", "Date created" },
+                { "DoctorFullName", "Assigned Doctor" },
+                { "FormattedDateCreated", "Date created" },
+            };
+            CompactColumns = new()
+            {
+                // "Model Property" - "Column Display Name"
+                { "ID", "ID" },
+                { "Title", "Title" },
+                { "Forenames", "Forename(s)" },
+                { "Surname", "Surname" },
+                { "Gender", "Gender" },
+                { "FormattedDateOfBirth", "Date of Birth" },
+                { "ReadableAddress", "Address" },
+                { "FormattedNHSNumber", "NHS Number" },
             };
             Form = [
                 new FormItemGroup([
                     new FormItemText {
                         Label = "ID",
                         DataBinding = nameof(Patient.ID),
-                        IsReadOnly = true,
+                        IsReadOnly = (_) => true,
                         Required = true,
+                        MaxWidth = 200,
                         DefaultValue = (_) => Patient.GeneratePatientID()
                     },
                     new FormItemText {
@@ -46,6 +61,12 @@ namespace PMS.Context
                         DataBinding = nameof(Patient.NHSNumber),
                         Required = true,
                         Pattern = new Regex("^\\d{0,10}$")
+                    },
+                    new FormItemCombo<int> {
+                        Label = "Assigned Doctor",
+                        Required = true,
+                        DataBinding = nameof(Patient.DoctorID),
+                        Options = Doctor.GetAllDoctorOptions()
                     }
                 ]),
                 new FormItemGroup([
@@ -70,7 +91,8 @@ namespace PMS.Context
                         Label = "Gender",
                         Required = true,
                         DataBinding = nameof(Patient.Gender),
-                        Options = Patient.GetAllGenderOptions()
+                        Options = Patient.GetAllGenderOptions(),
+                        MaxWidth = 175,
                     }
                 ]),
                 new FormItemGroup([
@@ -84,7 +106,7 @@ namespace PMS.Context
                         Required = true,
                         DataBinding = nameof(Patient.DateCreated),
                         DatePickerFormat = DatePickerFormat.Long,
-                        IsReadOnly = true,
+                        IsReadOnly = (_) => true,
                         DefaultValue = (_) => DateTime.Now
                     }
                 ]),
@@ -104,15 +126,15 @@ namespace PMS.Context
                 new FormItemText {
                     Label = "tblPatient:Address",
                     DataBinding = "Address",
-                    IsReadOnly = true,
-                    Hidden = true,
+                    IsReadOnly = (_) => true,
+                    Hidden = (_) => true,
                     DefaultValue = (_) => Patient.GeneratePatientID()
                 },
                 new FormItemText {
                     Label = "tblAddress:PatientID",
                     DataBinding = "ComputedAddress.PatientID",
-                    IsReadOnly = true,
-                    Hidden = true,
+                    IsReadOnly = (_) => true,
+                    Hidden = (_) => true,
                     DefaultValue = (_) => Patient.GeneratePatientID()
                 },
                 /* End relationship */
@@ -137,7 +159,7 @@ namespace PMS.Context
                         Label = "Postcode",
                         DataBinding = "ComputedAddress.Postcode",
                     }
-                ], "Address"),
+                ], "Address")
             ];
 
         }

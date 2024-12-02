@@ -63,5 +63,57 @@ namespace PMS.Util
                     throw new Exception("Illegal month value");
             }
         }
+
+        public static string GetOrdinal(int number)
+        {
+            // https://stackoverflow.com/a/20175s
+
+            switch (number % 100)
+            {
+                case 11:
+                case 12:
+                case 13:
+                    return "th";
+            }
+
+            switch (number % 10)
+            {
+                case 1:
+                    return "st";
+                case 2:
+                    return "nd";
+                case 3:
+                    return "rd";
+                default:
+                    return "th";
+            }
+        }
+
+        public static string ConvertToString(DateTime dateTime, bool hasTime = true)
+        {
+            string dayName = GetDayName(dateTime.DayOfWeek);
+            string dayOrdinal = GetOrdinal(dateTime.Day);
+
+            string monthName = GetMonthName(dateTime.Month);
+
+            string day = dateTime.Day.ToString();
+            string month = dateTime.Month.ToString().PadLeft(2, '0');
+            string year = dateTime.Year.ToString();
+            string hour = dateTime.Hour.ToString().PadLeft(2, '0');
+            string minute = dateTime.Minute.ToString().PadLeft(2, '0');
+            string second = dateTime.Second.ToString().PadLeft(2, '0');
+
+            string dateString = $"{dayName}, {day}{dayOrdinal} {monthName} {year}";
+            string timeString = $"{hour}:{minute}:{second}";
+
+            string dateTimeString = dateString;
+
+            if (hasTime)
+            {
+                dateTimeString += ", " + timeString;
+            }
+
+            return dateTimeString;
+        }
     }
 }

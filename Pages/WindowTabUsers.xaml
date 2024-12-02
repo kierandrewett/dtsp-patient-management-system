@@ -12,5 +12,9 @@
         PanelIcon="{StaticResource PersonIcon}"
         DataSource="{Binding DataContext.DataSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
         Columns="{Binding DataContext.Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        Form="{Binding DataContext.Form, RelativeSource={RelativeSource AncestorType=UserControl}}"    
+        Model="{Binding DataContext.Model, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        CanEdit="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        CanCreate="{Binding DataContext.CanCreate, RelativeSource={RelativeSource AncestorType=UserControl}}"
     />
 </UserControl>

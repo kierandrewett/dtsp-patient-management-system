@@ -1,4 +1,5 @@
-﻿using PMS.Controllers;
+﻿using Microsoft.IdentityModel.Tokens;
+using PMS.Controllers;
 using PMS.Models;
 using PMS.Util;
 using System;
@@ -92,6 +93,29 @@ namespace PMS.Components
             set { SetValue(ColumnsProperty, value); }
         }
 
+        public static readonly DependencyProperty CanEditProperty = DependencyProperty.Register("CanEdit", typeof(bool), typeof(PMSDataManager), new PropertyMetadata(true, OnDataSourceChanged));
+
+        public bool CanEdit
+        {
+            get { return (bool)GetValue(CanEditProperty); }
+            set { 
+                SetValue(CanEditProperty, value);
+                DidUpdateProperty("CanEdit");
+            }
+        }
+
+        public static readonly DependencyProperty CanCreateProperty = DependencyProperty.Register("CanCreate", typeof(bool), typeof(PMSDataManager), new PropertyMetadata(true, OnDataSourceChanged));
+
+        public bool CanCreate
+        {
+            get { return (bool)GetValue(CanCreateProperty); }
+            set
+            {
+                SetValue(CanCreateProperty, value);
+                DidUpdateProperty("CanCreate");
+            }
+        }
+
 
         public static readonly DependencyProperty FormProperty = DependencyProperty.Register("Form", typeof(FormItemBase[]), typeof(PMSDataManager));
 
@@ -172,6 +196,8 @@ namespace PMS.Components
                 ForceUpdateDataGridColumns();
 
                 DidUpdateProperty("ObservableDataSource");
+                DidUpdateProperty("HasSave");
+                DidUpdateProperty("CanView");
             }
         }
 
@@ -188,7 +214,7 @@ namespace PMS.Components
                 return;
             }
 
-            DataGrid.Columns.Clear();
+            DataGrid.InnerDataGrid.Columns.Clear();
 
             // Add selected column
             DataGridCheckBoxColumn isSelectedColumn = new()
@@ -196,14 +222,16 @@ namespace PMS.Components
                 Binding = new Binding("IsSelected")
             };
 
-            DataGrid.Columns.Add(isSelectedColumn);
+            DataGrid.InnerDataGrid.Columns.Add(isSelectedColumn);
 
             Type? modelDataType = ObservableDataSource?.FirstOrDefault()?.Value.GetType();
 
             foreach (KeyValuePair<string, string> pair in Columns)
             {
                 string modelName = pair.Key;
-                string headerName = pair.Value;
+                string headerName = pair.Value.Replace("_", "");
+
+                bool isColumnHidden = pair.Value.ToCharArray()[0] == '_';
 
                 PropertyInfo? prop = modelDataType?
                     .GetProperty(modelName);
@@ -240,13 +268,17 @@ namespace PMS.Components
                     };
                 }
 
-                DataGrid.Columns.Add(column);
+                column.Visibility = isColumnHidden 
+                    ? Visibility.Collapsed 
+                    : Visibility.Visible;
+
+                DataGrid.InnerDataGrid.Columns.Add(column);
             }
 
             DataGridTemplateColumn editColumn = new();
-            editColumn.CellTemplate = (DataTemplate)this.FindResource("DataGrid_EditButton");
+            editColumn.CellTemplate = (DataTemplate)this.FindResource(CanView ? "DataGrid_ViewButton" : "DataGrid_EditButton");
 
-            DataGrid.Columns.Add(editColumn);
+            DataGrid.InnerDataGrid.Columns.Add(editColumn);
         }
 
         public void DidUpdateProperty(string property)
@@ -278,69 +310,86 @@ namespace PMS.Components
         {
             foreach (var item in ObservableDataSource)
             {
-                item.IsSelected = DataGrid.SelectedItems.Contains(item);
+                item.IsSelected = DataGrid.InnerDataGrid.SelectedItems.Contains(item);
             }
 
-            AllItemsSelectedCheckbox.IsChecked = DataGrid.SelectedItems.Count <= 0
+            AllItemsSelectedCheckbox.IsChecked = DataGrid.InnerDataGrid.SelectedItems.Count <= 0
                 ? false
-                : DataGrid.SelectedItems.Count >= DataGrid.Items.Count
+                : DataGrid.InnerDataGrid.SelectedItems.Count >= DataGrid.InnerDataGrid.Items.Count
                     ? true
                     : null;
 
             DidUpdateProperty("HasSelectedItems");
         }
 
-        private void OnDataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+        private void OnDataGrid_SelectedCellsChanged(object sender, RoutedEventArgs e)
         {
             UpdateSelectedCells();
         }
 
         private void OnSelectAllCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            int selectedCells = DataGrid.SelectedCells.Count;
-            int itemsCount = DataGrid.Items.Count;
+            int selectedCells = DataGrid.InnerDataGrid.SelectedCells.Count;
+            int itemsCount = DataGrid.InnerDataGrid.Items.Count;
 
             if (selectedCells >= itemsCount)
             {
-                DataGrid.UnselectAll();
+                DataGrid.InnerDataGrid.UnselectAll();
             }
             else
             {
-                foreach (var cell in DataGrid.Items)
+                foreach (var cell in DataGrid.InnerDataGrid.Items)
                 {
-                    DataGrid.SelectedItems.Add(cell);
+                    DataGrid.InnerDataGrid.SelectedItems.Add(cell);
                 }
-                DataGrid.SelectAll();
+                DataGrid.InnerDataGrid.SelectAll();
             }
         }
 
-        private void OnDataGrid_CurrentCellChanged(object sender, EventArgs e)
+        private void OnDataGrid_CurrentCellChanged(object sender, RoutedEventArgs e)
         {
             UpdateSelectedCells();
         }
 
         public void ApplyDataGridFilter(string filter)
         {
+            Mouse.OverrideCursor = Cursors.Wait;
+
             ICollectionView cvData = CollectionViewSource.GetDefaultView(
-                DataGrid.ItemsSource
+                DataGrid.InnerDataGrid.ItemsSource
             );
 
             if (cvData == null) return;
+
+            List<object> items = [];
+
+            foreach (DataItem item in DataGrid.InnerDataGrid.ItemsSource)
+            {
+                items.Add(item.Value);
+            }
+
+            object[] rankedItems = SearchController.SimpleRankedSearch<object>(
+                filter,
+                items,
+                [.. Columns.Keys]
+            );
 
             cvData.Filter = new Predicate<object>(d =>
             {
                 if (d is DataItem dataItem)
                 {
-                    return SearchController.SimpleSearchPredicate(filter, Columns.Keys.ToArray())(dataItem.Value);
+                    return rankedItems.Contains(dataItem.Value);
                 }
 
                 return false;
             });
+
+            Mouse.OverrideCursor = null;
         }
 
         public bool HasSelectedItems
         {
-            get => DataGrid.SelectedItems.Count > 0;
+            get => DataGrid.InnerDataGrid.SelectedItems.Count > 0;
         }
 
         public bool HasSearch
@@ -350,12 +399,17 @@ namespace PMS.Components
 
         public bool HasSave
         {
-            get => SelectedPanel == DataManagerPanel.Edit;
+            get => SelectedPanel == DataManagerPanel.Edit && (EditingDataItem == null ? CanCreate : CanEdit);
         }
 
         public bool CanGoBack
         {
             get => SelectedPanel != DataManagerPanel.Default;
+        }
+
+        public bool CanView
+        {
+            get => !CanEdit;
         }
 
         private DataItem[]? _EditingDataItems;
@@ -420,6 +474,8 @@ namespace PMS.Components
                 // Depends on the value of SelectedPanel
                 DidUpdateProperty("HasSearch");
                 DidUpdateProperty("HasSave");
+                DidUpdateProperty("CanEdit");
+                DidUpdateProperty("CanView");
                 DidUpdateProperty("CanGoBack");
 
             }
@@ -454,11 +510,26 @@ namespace PMS.Components
 
         public void OnDataItem_RequestEdit(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button)
-            {
-                DataItem dataItem = (DataItem)button.DataContext;
+            DataItem? dataItem = null;
 
-                button.RaiseEvent(new RoutedEventArgs(EntryRequestEditEvent));
+            try
+            {
+                if (sender is Button)
+                {
+                    dataItem = (DataItem)((FrameworkElement)sender).DataContext;
+                }
+                else if (sender is PMSDataGrid)
+                {
+                    dataItem = (DataItem)((PMSDataGrid)sender).InnerDataGrid.SelectedItem;
+                }
+            } catch (Exception _)
+            {
+                // dirty workaround for casting errors
+            }
+
+            if (dataItem != null)
+            {
+                EnterEditMode([dataItem]);
             }
         }
 
@@ -469,7 +540,7 @@ namespace PMS.Components
             EditingDataItemIndex = 0;
             DidUpdateProperty("EditingDataItem");
 
-            UnsavedChangesLock = true;
+            UnsavedChangesLock = EditingDataItem == null ? CanCreate : CanEdit;
         }
 
         private void ExitEditMode()
@@ -506,7 +577,8 @@ namespace PMS.Components
                                             : "Are you sure you want to permanently delete this record?",
                                         "Confirm deletion",
                                         MessageBoxButton.YesNo,
-                                        MessageBoxImage.Question
+                                        MessageBoxImage.Question,
+                                        MessageBoxResult.No
                                     );
             
             if (result != MessageBoxResult.Yes)
@@ -533,13 +605,13 @@ namespace PMS.Components
         public void OnRequestDelete_Click(object sender, RoutedEventArgs e)
         {
 
-            DeleteRecords(DataGrid.SelectedItems.Cast<DataItem>().ToArray());
+            DeleteRecords(DataGrid.InnerDataGrid.SelectedItems.Cast<DataItem>().ToArray());
         }
 
         public void OnRequestEditSelected_Click(object sender, RoutedEventArgs e)
         {
-            int numSelected = DataGrid.SelectedItems.Count;
-            if (numSelected > 3)
+            int numSelected = DataGrid.InnerDataGrid.SelectedItems.Count;
+            if (numSelected > 3 && CanEdit)
             {
                 MessageBoxResult result = MessageBox.Show(
                     $"Over 3 entries have been selected for batch editing, do you wish to continue?",
@@ -554,7 +626,7 @@ namespace PMS.Components
                 }
             }
 
-            EnterEditMode(DataGrid.SelectedItems.Cast<DataItem>().ToArray());
+            EnterEditMode(DataGrid.InnerDataGrid.SelectedItems.Cast<DataItem>().ToArray());
         }
 
         private void SaveRecordToDatabase()
@@ -573,53 +645,59 @@ namespace PMS.Components
                         PropertyInfo? property = null;
                         object currentInstance = modelInstance;
 
-                        // Split the data binding
-                        // Sometimes we have cases like ComputedAddress.Postcode
-                        // Reflection is unable to handle the resolution of such
-                        // keys, therefore we must split it and handle the creation
-                        // of each substring (as ComputedAddress may not exist).
-                        string[] split = field.DataBinding.Split(".");
-
-                        for (int i = 0; i < split.Length; i++)
+                        if (!field.DataBinding.IsNullOrEmpty())
                         {
-                            string modelName = currentInstance.GetType().Name;
+                            // Split the data binding
+                            // Sometimes we have cases like ComputedAddress.Postcode
+                            // Reflection is unable to handle the resolution of such
+                            // keys, therefore we must split it and handle the creation
+                            // of each substring (as ComputedAddress may not exist).
+                            string[] split = field.DataBinding.Split(".");
 
-                            string key = split[i];
-                            bool isLastKey = (i + 1) >= split.Length;
-
-                            property = currentInstance.GetType().GetProperty(key);
-
-                            if (property == null || !property.CanWrite)
+                            for (int i = 0; i < split.Length; i++)
                             {
-                                Debug.WriteLine($"(Data Manager): Property '{key}' not found or not-writable on model '{modelName}', skipping...");
-                                continue;
-                            }
+                                string modelName = currentInstance.GetType().Name;
 
-                            if (isLastKey)
-                            {
-                                object? propertyValue = field.GetValue();
-                                Debug.WriteLine($"(Data Manager): Setting property on model '{modelName}': {property.Name}: {property.PropertyType} = {propertyValue}");
+                                string key = split[i];
+                                bool isLastKey = (i + 1) >= split.Length;
 
-                                property.SetValue(
-                                    currentInstance,
-                                    Convert.ChangeType(propertyValue, property.PropertyType)
-                                );
-                            }
-                            else
-                            {
-                                // Handle cases where we need to create sub-instances
-                                object? nestedInstance = property.GetValue(currentInstance);
+                                property = currentInstance.GetType().GetProperty(key);
 
-                                if (nestedInstance == null)
+                                if (property == null || !property.CanWrite)
                                 {
-                                    nestedInstance = Activator.CreateInstance(property.PropertyType);
-                                    property.SetValue(
-                                        currentInstance,
-                                        nestedInstance
-                                    );
+                                    Debug.WriteLine($"(Data Manager): Property '{key}' not found or not-writable on model '{modelName}', skipping...");
+                                    continue;
                                 }
 
-                                currentInstance = nestedInstance;
+                                if (isLastKey)
+                                {
+                                    object? propertyValue = field.GetValue();
+                                    object? serialisedPropertyValue = field.SerialiseWith != null 
+                                        ? field.SerialiseWith(propertyValue) 
+                                        : propertyValue;
+                                    Debug.WriteLine($"(Data Manager): Setting property on model '{modelName}': {property.Name}: {property.PropertyType} = {serialisedPropertyValue}");
+
+                                    property.SetValue(
+                                        currentInstance,
+                                        Convert.ChangeType(serialisedPropertyValue, property.PropertyType)
+                                    );
+                                }
+                                else
+                                {
+                                    // Handle cases where we need to create sub-instances
+                                    object? nestedInstance = property.GetValue(currentInstance);
+
+                                    if (nestedInstance == null)
+                                    {
+                                        nestedInstance = Activator.CreateInstance(property.PropertyType);
+                                        property.SetValue(
+                                            currentInstance,
+                                            nestedInstance
+                                        );
+                                    }
+
+                                    currentInstance = nestedInstance;
+                                }
                             }
                         }
                     }
@@ -676,41 +754,88 @@ namespace PMS.Components
                 Random rnd = new Random();
                 await Task.Delay(rnd.Next(100, 400));
 
-                // If we're editing an existing record
-                // we will have a EditingDataItem.
-                if (
-                    EditingDataItem != null &&
-                    EditingDataItems.Length > 1 &&
-                    (EditingDataItemIndex + 1) < EditingDataItems.Length)
+                if (DataForm.SubmitForm() && SafeSaveRecordToDatabase())
                 {
-                    if (DataForm.SubmitForm() && SafeSaveRecordToDatabase())
+                    if (EditingDataItem == null || EditingDataItemIndex == (EditingDataItems.Length - 1))
                     {
-                        EditingDataItemIndex++;
-                        DidUpdateProperty("EditingDataItem");
+                        MessageBox.Show(
+                            $"Successfully saved {EditingDataItems?.Length ?? 1} records.",
+                            "Saved records",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information
+                        );
 
+                        UnsavedChangesLock = false;
+                        ExitEditMode();
+                    }
+                    else
+                    {
                         // Indicate that the record has been
                         // saved without prompting the user
                         SystemSounds.Asterisk.Play();
                     }
-                }
-                else if (DataForm.SubmitForm() && SafeSaveRecordToDatabase())
-                {
-                    // Otherwise, we can assume we have exhausted the list
-                    // OR: we are creating a new record
-                    MessageBox.Show(
-                        $"Successfully saved {EditingDataItems?.Length ?? 1} records.",
-                        "Saved records",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information
-                    );
 
-                    UnsavedChangesLock = false;
-                    ExitEditMode();
+                    Mouse.OverrideCursor = null;
+
+                    header.SaveButton.Content = "Saved";
+
+                    await Task.Delay(1000);
+
+                    header.SaveButton.Content = "Save changes";
+                    header.SaveButton.IsEnabled = true;
                 }
 
                 Mouse.OverrideCursor = null;
                 header.SaveButton.IsEnabled = true;
             }
+        }
+
+        public async void ChangeDataItemIndex(int newIdx)
+        {
+            if (EditingDataItem == null)
+            {
+                return;
+            }
+
+            if (newIdx < 0 || newIdx > EditingDataItems.Length)
+            {
+                return;
+            }
+
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            Random rnd = new Random();
+            await Task.Delay(rnd.Next(100, 400));
+
+            EditingDataItemIndex = newIdx;
+            DidUpdateProperty("EditingDataItem");
+
+            // Indicate that the record has been
+            // saved without prompting the user
+            SystemSounds.Asterisk.Play();
+
+            Mouse.OverrideCursor = null;
+        }
+
+
+        public async void OnForm_RequestPreviousRecord(object sender, RoutedEventArgs e)
+        {
+            if (EditingDataItem == null)
+            {
+                return;
+            }
+
+            ChangeDataItemIndex((EditingDataItemIndex ?? 0) - 1);
+        }
+
+        public void OnForm_RequestNextRecord(object sender, RoutedEventArgs e)
+        {
+            if (EditingDataItem == null)
+            {
+                return;
+            }
+
+            ChangeDataItemIndex((EditingDataItemIndex ?? 0) + 1);
         }
     }
 }

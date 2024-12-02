@@ -3,22 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
 
 namespace PMS.Models
 {
-    public enum UserType
-    {
-        Admin,
-        Doctor,
-        Patient,
-        Nurse
-    }
-
     public class User : Person<int>
     {
+        public override string ORM_TABLE => "tblUser";
+        public override string ORM_PRIMARY_KEY => "ID";
+
         protected string _Username;
         public string Username
         {
@@ -30,14 +26,14 @@ namespace PMS.Models
             }
         }
 
-        protected string _Password;
-        public string Password
+        protected string _HashedPassword;
+        public string HashedPassword
         {
-            get { return _Password; }
+            get { return _HashedPassword; }
             set
             {
-                _Password = value;
-                DidUpdateProperty("Password");
+                _HashedPassword = value;
+                DidUpdateProperty("HashedPassword");
             }
         }
 
@@ -63,6 +59,17 @@ namespace PMS.Models
             }
         }
 
+        protected bool _HasFirstLogin;
+        public bool HasFirstLogin
+        {
+            get { return _HasFirstLogin; }
+            set
+            {
+                _HasFirstLogin = value;
+                DidUpdateProperty("HasFirstLogin");
+            }
+        }
+
         public static User[]? GetAllUsers()
         {
             return AppDatabase.QueryAll<User>(
@@ -85,6 +92,29 @@ namespace PMS.Models
                 "SELECT * FROM tblUser WHERE UserType=?",
                 [((int)userType).ToString()]
             );
+        }
+
+        public static User? GetUserByID(int id)
+        {
+            return AppDatabase.QueryFirst<User>(
+                "SELECT * FROM tblUser WHERE ID=?",
+                [id.ToString()]
+            );
+        }
+
+        public static int GenerateUserID()
+        {
+            int currentSequence = AppDatabase.QueryCount<User>(
+                "SELECT * FROM tblUser",
+                []
+            );
+
+            return currentSequence + 1;
+        }
+
+        public static string GeneratePassword()
+        {
+            return PasswordHelper.GeneratePassword();
         }
     }
 }

@@ -13,6 +13,8 @@ using System.Reflection;
 using System.Windows.Controls.Primitives;
 using System.Collections;
 using System.Text.RegularExpressions;
+using PMS.Dialogs;
+using System.Security.Cryptography;
 
 namespace PMS.Controllers
 {
@@ -56,7 +58,7 @@ namespace PMS.Controllers
             }
         }
 
-        public async Task<Result<User, Exception>> HandleAuthenticationRequest(string username, string password)
+        public async Task<Result<User, Exception>> HandleAuthenticationRequest(string username, string plainTextPassword)
         {
             // Add artificial delay to prevent automated attacks
             Random rng = new();
@@ -68,22 +70,108 @@ namespace PMS.Controllers
                 return Result<User, Exception>.Err(blocked);
             }
 
+            string hashedPassword = PasswordHelper.HashPassword(plainTextPassword);
+
             User? user = AppDatabase.QueryFirst<User>(
-                "SELECT * FROM tblUser WHERE Username=? AND Password=?", 
-                [username, password]
+                AppConstants.IsDebug
+                    ? "SELECT * FROM tblUser WHERE Username=?" // DANGEROUS: In debug mode, we don't check if the password matches
+                    : "SELECT * FROM tblUser WHERE Username=? AND HashedPassword=?",
+                AppConstants.IsDebug ? [username] : [username, hashedPassword]
             );
 
-            if (user != null)
+            if (user != null && !user.IsDisabled)
             {
+                Result<User, Exception> firstLoginResult = MaybeHandleFirstLogin(user);
+
+                if (firstLoginResult.IsErr())
+                {
+                    return Result<User, Exception>.Err(
+                        firstLoginResult.Error
+                    );
+                }
+
                 return Result<User, Exception>.Ok(user);
             }
 
             RecordFailedLoginAttempt();
 
-            return Result<User, Exception>.Err(
-                new Exception("Username or password is invalid, please try again.")
-            );
+            if (user?.IsDisabled == true)
+            {
+                return Result<User, Exception>.Err(
+                    new Exception("User account has been disabled by your system administrator, please contact them for more information.")
+                );
+            } else
+            {
+                return Result<User, Exception>.Err(
+                    new Exception("Username or password is invalid, please try again.")
+                );
+            }
+
         }
+
+        public Result<bool, Exception> HandlePasswordChangeRequest(User? authorisedUser = null, User? targetUser = null)
+        {
+            Result<User, Exception> passwordChangeRequestResult =
+                this.InternalHandlePasswordChangeRequest(authorisedUser, targetUser);
+
+            if (passwordChangeRequestResult.IsErr())
+            {
+                return Result<bool, Exception>.Err(passwordChangeRequestResult.Error);
+            }
+
+            PMSPasswordChangeWindow passwordChangeWindow = new(passwordChangeRequestResult.Value);
+            bool? result = passwordChangeWindow.ShowDialog();
+
+            // This occurs when the dialog is closed or canceled
+            if (result == null || result == false)
+            {
+                return Result<bool, Exception>.Ok(false);
+            }
+
+            return Result<bool, Exception>.Ok(true);
+        }
+
+
+        public Result<User, Exception> MaybeHandleFirstLogin(User user)
+        {
+            if (!user.HasFirstLogin)
+            {
+                MessageBox.Show(
+                    $"Welcome to {AppConstants.AppName}, {user.FormatFullName()}. As you are logging in for the first time, the system administrator will require you to update your password.",
+                    $"Welcome to {AppConstants.AppName}",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
+
+                Result<bool, Exception> result = HandlePasswordChangeRequest(user, user);
+
+                if (result.IsErr())
+                {
+                    return Result<User, Exception>.Err(
+                        result.Error
+                    );
+                }
+
+                int? updatedRows = AppDatabase.Update(
+                    "UPDATE tblUser SET [HasFirstLogin]=? WHERE (ID=?)",
+                    ["1" /* true in string form */, user.ID.ToString()]
+                );
+
+                if (updatedRows != null && updatedRows > 0)
+                {
+                    return Result<User, Exception>.Ok(user);
+                }
+                else
+                {
+                    return Result<User, Exception>.Err(
+                        new Exception("No changes were committed to the database.")
+                    );
+                }
+            }
+
+            return Result<User, Exception>.Ok(user);
+        }
+
         private Result<SecurityQuestionAnswer[], Exception> GetUserSecurityQuestionAnswers(User user)
         {
             string query =
@@ -135,6 +223,13 @@ namespace PMS.Controllers
                 );
             }
 
+            if(user.IsDisabled)
+            {
+                return Result<User, Exception>.Err(
+                    new Exception("User account cannot be recovered as it has been disabled by the system administrator.")
+                );
+            }
+
             Result<SecurityQuestionAnswer[], Exception> securityQuestionAnswersResult =
                 GetUserSecurityQuestionAnswers(user);
 
@@ -182,7 +277,7 @@ namespace PMS.Controllers
             return Result<User, Exception>.Ok(user);
         }
 
-        public Result<User, Exception> HandlePasswordChangeRequest(User? authorisedUser = null, User? targetUser = null)
+        public Result<User, Exception> InternalHandlePasswordChangeRequest(User? authorisedUser = null, User? targetUser = null)
         {
             bool securityQuestionsVerified = false;
 
@@ -217,11 +312,20 @@ namespace PMS.Controllers
             }
         }
 
-        public Result<bool, Exception> HandlePasswordChangeFinalRequest(User targetUser, string newPassword)
+        public Result<bool, Exception> HandlePasswordChangeFinalRequest(User targetUser, string newPlainTextPassword, User? authorisedUser = null)
         {
+            string hashedPassword = PasswordHelper.HashPassword(newPlainTextPassword);
+
+            if (targetUser.HashedPassword == hashedPassword)
+            {
+                return Result<bool, Exception>.Err(
+                    new Exception("New password cannot be the same as the old password.")
+                );
+            }
+
             int? updatedRows = AppDatabase.Update(
-                "UPDATE tblUser SET [Password]=? WHERE (ID=?)",
-                [newPassword, targetUser.ID.ToString()]
+                "UPDATE tblUser SET [HashedPassword]=? WHERE (ID=?)",
+                [hashedPassword, targetUser.ID.ToString()]
             );
 
             if (updatedRows != null && updatedRows > 0)
