@@ -1,4 +1,5 @@
-﻿using PMS.Controllers;
+﻿using PMS.Components;
+using PMS.Controllers;
 using PMS.Models;
 using PMS.Util;
 using System;
@@ -22,9 +23,9 @@ namespace PMS.Dialogs
     /// <summary>
     /// Interaction logic for PMSSignOnWindow.xaml
     /// </summary>
-    public partial class PMSSignOnWindow : Window
+    public partial class PMSSignOnWindow : PMSWindow
     {
-        public PMSSignOnWindow()
+        public PMSSignOnWindow() : base()
         {
             InitializeComponent();
 
@@ -40,13 +41,25 @@ namespace PMS.Dialogs
 
             if (username.Length <= 0)
             {
-                MessageBox.Show("Username must not be blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxController.Show(
+                    this,
+                    "Username must not be blank.", 
+                    "Error", 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Error
+                );
                 return;
             }
 
             if (password.Length <= 0)
             {
-                MessageBox.Show("Password must not be blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxController.Show(
+                    this, 
+                    "Password must not be blank.", 
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
                 return;
             }
 
@@ -66,7 +79,13 @@ namespace PMS.Dialogs
                 ProgressBar.Opacity = 0;
                 ProgressBar.IsIndeterminate = false;
 
-                MessageBox.Show(authenticationResult.Error.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxController.Show(
+                    this, 
+                    authenticationResult.Error.Message, 
+                    "Error", 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Error
+                );
 
                 SubmitButton.Content = "Sign in";
 
@@ -99,6 +118,12 @@ namespace PMS.Dialogs
             ShowDialog();
         }
 
+        private void OpenSettings_Click(object sender, RoutedEventArgs e)
+        {
+            PMSSettingsWindow sw = new();
+            sw.ShowDialog();
+        }
+
 #if DEBUG
         private void DebugSignIn(UserType userType, object sender, RoutedEventArgs e)
         {
@@ -117,7 +142,8 @@ namespace PMS.Dialogs
                     SignIn_Click(sender, e);
                 } else
                 {
-                    MessageBox.Show(
+                    MessageBoxController.Show(
+                        this,
                         "No users found for that user type!",
                         "Error",
                         MessageBoxButton.OK,
@@ -141,6 +167,6 @@ namespace PMS.Dialogs
         {
             DebugSignIn(UserType.Admin, sender, e);
         }
-    }
 #endif
+    }
 }

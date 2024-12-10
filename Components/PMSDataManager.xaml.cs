@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Media;
@@ -17,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -93,6 +95,14 @@ namespace PMS.Components
             set { SetValue(ColumnsProperty, value); }
         }
 
+
+        public static readonly DependencyProperty ColumnSortProperty = DependencyProperty.Register("ColumnSort", typeof(SortDescription?), typeof(PMSDataManager), new PropertyMetadata(null, OnDataSourceChanged));
+
+        public SortDescription? ColumnSort
+        {
+            get { return (SortDescription?)GetValue(ColumnSortProperty); }
+            set { SetValue(ColumnSortProperty, value); }
+        }
         public static readonly DependencyProperty CanEditProperty = DependencyProperty.Register("CanEdit", typeof(bool), typeof(PMSDataManager), new PropertyMetadata(true, OnDataSourceChanged));
 
         public bool CanEdit
@@ -116,7 +126,6 @@ namespace PMS.Components
             }
         }
 
-
         public static readonly DependencyProperty FormProperty = DependencyProperty.Register("Form", typeof(FormItemBase[]), typeof(PMSDataManager));
 
         public FormItemBase[] Form
@@ -134,6 +143,15 @@ namespace PMS.Components
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+
+        public static readonly RoutedEvent ManagerReadyEvent = EventManager.RegisterRoutedEvent("ManagerReady", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PMSDataManager));
+
+        public event RoutedEventHandler ManagerReady
+        {
+            add { AddHandler(ManagerReadyEvent, value); }
+            remove { RemoveHandler(ManagerReadyEvent, value); }
+        }
 
 
         private DataManagerPanel _SelectedPanel;
@@ -198,6 +216,17 @@ namespace PMS.Components
                 DidUpdateProperty("ObservableDataSource");
                 DidUpdateProperty("HasSave");
                 DidUpdateProperty("CanView");
+
+                if (ColumnSort is SortDescription sortDesc)
+                {
+                    var view = CollectionViewSource.GetDefaultView(DataGrid.InnerDataGrid.ItemsSource);
+                    if (view != null)
+                    {
+                        view.SortDescriptions.Clear(); 
+                        view.SortDescriptions.Add(new SortDescription($"Value.{sortDesc.PropertyName}", sortDesc.Direction));
+                        view.Refresh();
+                    }
+                }
             }
         }
 
@@ -238,7 +267,7 @@ namespace PMS.Components
 
                 if (prop == null)
                 {
-                    Debug.WriteLine($"(Data View Reflection): No property with name '{modelName}' on {modelDataType}, skipping...");
+                    LogController.WriteLine($"No property with name '{modelName}' on {modelDataType}, skipping...", LogCategory.DataViewReflection);
                     continue;
                 }
 
@@ -247,7 +276,7 @@ namespace PMS.Components
 
                 DataGridBoundColumn column;
 
-                Debug.WriteLine($"(Data View Reflection): Currently processing on {modelDataType}: {modelName} ({headerName}): {propertyType?.ToString()}");
+                LogController.WriteLine($"(Data View Reflection): Currently processing on {modelDataType}: {modelName} ({headerName}): {propertyType?.ToString()}", LogCategory.DataViewReflection);
 
                 // Special case for bool types
                 if (propertyType == typeof(bool))
@@ -255,7 +284,8 @@ namespace PMS.Components
                     column = new DataGridCheckBoxColumn()
                     {
                         Header = headerName,
-                        Binding = new Binding($"Value.{modelName}")
+                        Binding = new Binding($"Value.{modelName}"),
+                        SortMemberPath = $"Value.{modelName}"
                     };
                 }
                 else
@@ -264,7 +294,8 @@ namespace PMS.Components
                     column = new DataGridTextColumn()
                     {
                         Header = headerName,
-                        Binding = new Binding($"Value.{modelName}")
+                        Binding = new Binding($"Value.{modelName}"),
+                        SortMemberPath = $"Value.{modelName}"
                     };
                 }
 
@@ -371,7 +402,7 @@ namespace PMS.Components
             object[] rankedItems = SearchController.SimpleRankedSearch<object>(
                 filter,
                 items,
-                [.. Columns.Keys]
+                [..(Columns ?? []).Keys]
             );
 
             cvData.Filter = new Predicate<object>(d =>
@@ -464,6 +495,7 @@ namespace PMS.Components
                 await Task.Delay(rnd.Next(100, 400));
 
                 newPanelEl.Visibility = Visibility.Visible;
+                newPanelEl.Focus();
 
                 _SelectedPanel = newPanel;
 
@@ -495,61 +527,77 @@ namespace PMS.Components
             {
                 Window parentWindow = Window.GetWindow(this);
 
-                return ((MainWindow)parentWindow)?.UnsavedChangesLock ?? false;
+                return ((PMSLockableWindow)parentWindow)?.ChangesProtectionController.UnsavedChangesLock ?? false;
             }
             set
             {
                 Window parentWindow = Window.GetWindow(this);
 
-                if (parentWindow is MainWindow mainWindow)
+                if (parentWindow is PMSLockableWindow win)
                 {
-                    mainWindow.UnsavedChangesLock = value;
+                    win.ChangesProtectionController.UnsavedChangesLock = value;
                 }
             }
         }
 
         public void OnDataItem_RequestEdit(object sender, RoutedEventArgs e)
         {
-            DataItem? dataItem = null;
+            DataItem[]? dataItems = null;
 
             try
             {
                 if (sender is Button)
                 {
-                    dataItem = (DataItem)((FrameworkElement)sender).DataContext;
+                    dataItems = [(DataItem)((FrameworkElement)sender).DataContext];
                 }
                 else if (sender is PMSDataGrid)
                 {
-                    dataItem = (DataItem)((PMSDataGrid)sender).InnerDataGrid.SelectedItem;
+                    dataItems = ((PMSDataGrid)sender).InnerDataGrid.SelectedItems
+                        .Cast<DataItem>()
+                        .ToArray();
                 }
             } catch (Exception _)
             {
                 // dirty workaround for casting errors
             }
 
-            if (dataItem != null)
+            if (!dataItems.IsNullOrEmpty())
             {
-                EnterEditMode([dataItem]);
+                EnterEditMode(dataItems);
             }
         }
-
-        private void EnterEditMode(DataItem[]? dataItems)
+        public void EnterEditMode(DataItem[]? dataItems)
         {
             SelectedPanel = DataManagerPanel.Edit;
-            EditingDataItems = dataItems;
+            EditingDataItems = dataItems?.Length > 0 ? dataItems : null;
             EditingDataItemIndex = 0;
             DidUpdateProperty("EditingDataItem");
 
             UnsavedChangesLock = EditingDataItem == null ? CanCreate : CanEdit;
+
+            if (Window.GetWindow(this) is PMSWindow window && DataSource != null)
+            {
+                string modelName = EditingDataItem?.Value.GetType().Name ?? "Entry";
+
+                window.AccessibilityController.CancelAll();
+                window.AccessibilityController.MaybeAnnounceArbritary(
+                    EditingDataItem == null
+                        ? $"New {modelName}"
+                        : CanEdit
+                            ? $"Editing existing {modelName}"
+                            : $"{modelName} is read-only",
+                    true
+                );
+            }
         }
 
-        private void ExitEditMode()
+        public void ExitEditMode()
         {
             if (SelectedPanel == DataManagerPanel.Edit)
             {
                 if (
                     UnsavedChangesLock == true && 
-                    !ChangesProtectionController.UnsavedChangesGuard()
+                    !ChangesProtectionController.UnsavedChangesGuard(this)
                 ) {
                     return;
                 }
@@ -561,17 +609,13 @@ namespace PMS.Components
 
             UnsavedChangesLock = false;
 
-            Window parent = Window.GetWindow(this);
-
-            if (parent is MainWindow mainWindow)
-            {
-                mainWindow.TabsController.ReloadSelectedTab();
-            }
+            RefreshDataManagerOuterContent();
         }
 
         private void DeleteRecords(DataItem[] dataItems)
         {
-            MessageBoxResult result = MessageBox.Show(
+            MessageBoxResult result = MessageBoxController.Show(
+                                        Parent,
                                         dataItems.Length > 1
                                             ? $"Are you sure you want to permanently delete {dataItems.Length} items?"
                                             : "Are you sure you want to permanently delete this record?",
@@ -594,12 +638,29 @@ namespace PMS.Components
                 }
             }
 
+            RefreshDataManagerOuterContent();
+        }
+
+        public void RefreshDataManagerOuterContent()
+        {
             Window parent = Window.GetWindow(this);
 
             if (parent is MainWindow mainWindow)
             {
                 mainWindow.TabsController.ReloadSelectedTab();
             }
+            else if (parent is PMSLockableWindow win)
+            {
+                try
+                {
+                    win.InvalidateDataContext();
+                } catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+
+            RaiseEvent(new RoutedEventArgs(ManagerReadyEvent));
         }
 
         public void OnRequestDelete_Click(object sender, RoutedEventArgs e)
@@ -613,7 +674,8 @@ namespace PMS.Components
             int numSelected = DataGrid.InnerDataGrid.SelectedItems.Count;
             if (numSelected > 3 && CanEdit)
             {
-                MessageBoxResult result = MessageBox.Show(
+                MessageBoxResult result = MessageBoxController.Show(
+                    Parent,
                     $"Over 3 entries have been selected for batch editing, do you wish to continue?",
                     "Batch Edit",
                     MessageBoxButton.YesNo,
@@ -665,7 +727,7 @@ namespace PMS.Components
 
                                 if (property == null || !property.CanWrite)
                                 {
-                                    Debug.WriteLine($"(Data Manager): Property '{key}' not found or not-writable on model '{modelName}', skipping...");
+                                    LogController.WriteLine($"Property '{key}' not found or not-writable on model '{modelName}', skipping...", LogCategory.DataManager);
                                     continue;
                                 }
 
@@ -675,20 +737,29 @@ namespace PMS.Components
                                     object? serialisedPropertyValue = field.SerialiseWith != null 
                                         ? field.SerialiseWith(propertyValue) 
                                         : propertyValue;
-                                    Debug.WriteLine($"(Data Manager): Setting property on model '{modelName}': {property.Name}: {property.PropertyType} = {serialisedPropertyValue}");
 
-                                    property.SetValue(
-                                        currentInstance,
-                                        Convert.ChangeType(serialisedPropertyValue, property.PropertyType)
-                                    );
+                                    LogController.WriteLine($"Setting property on model '{modelName}': {property.Name}: {property.PropertyType} = {serialisedPropertyValue}", LogCategory.DataManager);
+
+                                    try
+                                    {
+                                        property.SetValue(
+                                            currentInstance,
+                                            Convert.ChangeType(serialisedPropertyValue, property.PropertyType)
+                                        );
+                                    } catch (Exception e)
+                                    {
+                                        LogController.WriteLine($"Unable to cast property to {property.PropertyType} on model '{modelName}': {property.Name}: {property.PropertyType} = {serialisedPropertyValue}\n{e.ToString()}", LogCategory.DataManager);
+                                    }
                                 }
                                 else
                                 {
+
                                     // Handle cases where we need to create sub-instances
                                     object? nestedInstance = property.GetValue(currentInstance);
 
                                     if (nestedInstance == null)
                                     {
+                                        LogController.WriteLine($"Setting property on model '{modelName}': {property.Name}: {property.PropertyType} = [new instance]", LogCategory.DataManager);
                                         nestedInstance = Activator.CreateInstance(property.PropertyType);
                                         property.SetValue(
                                             currentInstance,
@@ -712,7 +783,7 @@ namespace PMS.Components
                     return;
                 } else
                 {
-                    Debug.WriteLine($"(Data Manager): Model is not a valid BaseModel type.");
+                    LogController.WriteLine($"Model is not a valid BaseModel type.", LogCategory.DataManager);
                 }
             }
         }
@@ -725,7 +796,8 @@ namespace PMS.Components
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    Parent,
                     $"Failed to save record.\n\n{ex.ToString()}",
                     "Error",
                     MessageBoxButton.OK,
@@ -758,7 +830,8 @@ namespace PMS.Components
                 {
                     if (EditingDataItem == null || EditingDataItemIndex == (EditingDataItems.Length - 1))
                     {
-                        MessageBox.Show(
+                        MessageBoxController.Show(
+                            Parent,
                             $"Successfully saved {EditingDataItems?.Length ?? 1} records.",
                             "Saved records",
                             MessageBoxButton.OK,
@@ -836,6 +909,11 @@ namespace PMS.Components
             }
 
             ChangeDataItemIndex((EditingDataItemIndex ?? 0) + 1);
+        }
+
+        public void DoCreate()
+        {
+            CreateButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         }
     }
 }

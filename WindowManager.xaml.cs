@@ -1,4 +1,5 @@
-﻿using PMS.Controllers;
+﻿using PMS.Components;
+using PMS.Controllers;
 using PMS.Dialogs;
 using PMS.Models;
 using PMS.Util;
@@ -7,6 +8,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Speech.Synthesis;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,7 +25,7 @@ namespace PMS
     /// <summary>
     /// Interaction logic for WindowManager.xaml
     /// </summary>
-    public partial class WindowManager : Window
+    public partial class WindowManager : PMSWindow
     {
         public PMSSignOnWindow? SignOnWindow = null;
         public MainWindow? MainWindow = null;
@@ -31,6 +33,8 @@ namespace PMS
         public User? AuthorisedUser;
 
         private AuthenticationController AuthenticationController;
+        private SettingsController SettingsController;
+        public SynthesizerController SynthesizerController;
 
         public WindowManager()
         {
@@ -44,7 +48,12 @@ namespace PMS
 
         public void Init()
         {
-            AuthenticationController = new AuthenticationController();
+            AuthenticationController = new AuthenticationController(this);
+            SettingsController = new SettingsController();
+            SynthesizerController = new SynthesizerController(this);
+
+            // Ensure we have the settings dirs set up
+            SettingsController.ReadSettings();
 
             // If we have window remnants, clean them up
             MainWindow?.Close();
@@ -130,13 +139,13 @@ namespace PMS
         {
             if (
                 this.MainWindow != null &&
-                this.MainWindow!.UnsavedChangesLock && 
-                !ChangesProtectionController.UnsavedChangesGuard()
+                this.MainWindow!.ChangesProtectionController.UnsavedChangesLock && 
+                !ChangesProtectionController.UnsavedChangesGuard(this)
             ) {
                 return;
             }
 
-            this.MainWindow!.UnsavedChangesLock = false;
+            this.MainWindow!.ChangesProtectionController.UnsavedChangesLock = false;
 
             AuthorisedUser = null;
 

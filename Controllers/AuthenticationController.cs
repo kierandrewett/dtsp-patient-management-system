@@ -15,6 +15,8 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using PMS.Dialogs;
 using System.Security.Cryptography;
+using PMS.Components;
+using Microsoft.IdentityModel.Tokens;
 
 namespace PMS.Controllers
 {
@@ -24,6 +26,13 @@ namespace PMS.Controllers
         private DateTime? LoginUnlockedAt = null;
 
         private bool SecurityQuestionsVerifiedLock = false;
+
+        private PMSWindow Window { get; set; }
+
+        public AuthenticationController(PMSWindow window)
+        {
+            Window = window;
+        }
 
         private Exception? MaybeBlockRequest()
         {
@@ -73,10 +82,8 @@ namespace PMS.Controllers
             string hashedPassword = PasswordHelper.HashPassword(plainTextPassword);
 
             User? user = AppDatabase.QueryFirst<User>(
-                AppConstants.IsDebug
-                    ? "SELECT * FROM tblUser WHERE Username=?" // DANGEROUS: In debug mode, we don't check if the password matches
-                    : "SELECT * FROM tblUser WHERE Username=? AND HashedPassword=?",
-                AppConstants.IsDebug ? [username] : [username, hashedPassword]
+                "SELECT * FROM tblUser WHERE Username=? AND HashedPassword=?",
+                [username, hashedPassword]
             );
 
             if (user != null && !user.IsDisabled)
@@ -136,7 +143,8 @@ namespace PMS.Controllers
         {
             if (!user.HasFirstLogin)
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    Window,
                     $"Welcome to {AppConstants.AppName}, {user.FormatFullName()}. As you are logging in for the first time, the system administrator will require you to update your password.",
                     $"Welcome to {AppConstants.AppName}",
                     MessageBoxButton.OK,
@@ -169,47 +177,49 @@ namespace PMS.Controllers
                 }
             }
 
+            if (
+                user.ComputedSecurityQuestion1 == null ||
+                (
+                    user.ComputedSecurityQuestion1 != null &&
+                    (
+                        user.ComputedSecurityQuestion1.SecurityQuestionID == 0 ||
+                        user.ComputedSecurityQuestion1.Answer.IsNullOrEmpty()
+                    )
+                ) ||
+                user.ComputedSecurityQuestion2 == null ||
+                (
+                    user.ComputedSecurityQuestion2 != null &&
+                    (
+                        user.ComputedSecurityQuestion2.SecurityQuestionID == 0 ||
+                        user.ComputedSecurityQuestion2.Answer.IsNullOrEmpty()
+                    )
+                )
+            ) {
+                Result<bool, Exception> result = HandleSecurityQuestionsSetupRequest(user);
+
+                if (result.IsErr())
+                {
+                    return Result<User, Exception>.Err(
+                        result.Error
+                    );
+                }
+            }
+
             return Result<User, Exception>.Ok(user);
         }
 
-        private Result<SecurityQuestionAnswer[], Exception> GetUserSecurityQuestionAnswers(User user)
+        public Result<bool, Exception> HandleSecurityQuestionsSetupRequest(User targetUser)
         {
-            string query =
-                "SELECT tblSecurityQuestion.Question, tblUserSecurityQuestion.Answer, tblUserSecurityQuestion.SecurityQuestionID AS QuestionID " +
-                "FROM((tblSecurityQuestion INNER JOIN " +
-                "tblUserSecurityQuestion ON tblSecurityQuestion.ID = tblUserSecurityQuestion.SecurityQuestionID) INNER JOIN " +
-                "tblUser ON tblUserSecurityQuestion.UserID = tblUser.ID) " +
-                "WHERE(tblUser.ID = ?)";
+            PMSSecurityQuestionsSetupSelfServiceWindow securityQuestionsSSWindow = new(targetUser);
+            bool? result = securityQuestionsSSWindow.ShowDialog();
 
-            SecurityQuestionAnswer[]? securityQuestions = AppDatabase.QueryAll<SecurityQuestionAnswer>(
-                query,
-                [user.ID.ToString()]
-            );
-
-            if (securityQuestions == null)
+            // This occurs when the dialog is closed or canceled
+            if (result == null || result == false)
             {
-                return Result<SecurityQuestionAnswer[], Exception>.Err(
-                    new Exception("No security questions have been set-up, contact your system administrator for more information.")
-                );
+                return Result<bool, Exception>.Ok(false);
             }
 
-            return Result<SecurityQuestionAnswer[], Exception>.Ok(securityQuestions);
-        }
-
-        public static SecurityQuestion[]? GetAllSecurityQuestions()
-        {
-            return AppDatabase.QueryAll<SecurityQuestion>(
-                "SELECT * FROM tblSecurityQuestion",
-                []
-            );
-        }
-
-        public static SecurityQuestion? GetSecurityQuestionByID(int id)
-        {
-            return AppDatabase.QueryFirst<SecurityQuestion>(
-               "SELECT * FROM tblSecurityQuestion WHERE ID=?",
-               [id.ToString()]
-           );
+            return Result<bool, Exception>.Ok(true);
         }
 
         public Result<User, Exception> HandleSecurityQuestionsRecoveryRequest(string username, Dictionary<SecurityQuestion, string> questionToAnswerMap)
@@ -231,7 +241,7 @@ namespace PMS.Controllers
             }
 
             Result<SecurityQuestionAnswer[], Exception> securityQuestionAnswersResult =
-                GetUserSecurityQuestionAnswers(user);
+                SecurityQuestionAnswer.GetUserSecurityQuestionAnswers(user);
 
             if (securityQuestionAnswersResult.IsErr())
             {
@@ -247,7 +257,7 @@ namespace PMS.Controllers
                 foreach (SecurityQuestionAnswer questionAnswer in securityQuestionAnswers)
                 {
                     if (
-                        entry.Key.ID == questionAnswer.QuestionID &&
+                        entry.Key.ID == questionAnswer.SecurityQuestionID &&
                         entry.Value.ToLower() == questionAnswer.Answer.ToLower()
                        )
                     {
@@ -272,7 +282,7 @@ namespace PMS.Controllers
             // to avoid the flag bypassing importing authorisation
             // checks within permission gates.
             SecurityQuestionsVerifiedLock = true;
-            Debug.WriteLine("(Permission Controller): Permitting security question verification.");
+            LogController.WriteLine("Permitting security question verification.", LogCategory.PermissionController);
 
             return Result<User, Exception>.Ok(user);
         }

@@ -1,12 +1,13 @@
-﻿<Window x:Class="PMS.WindowManager"
+﻿<pmscomponents:PMSWindow x:Class="PMS.WindowManager"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PMS"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
         mc:Ignorable="d"
         Title="{StaticResource AppFullName}" Height="1" Width="1" ShowInTaskbar="False" Visibility="Hidden" MaxWidth="1" MaxHeight="1" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         
     </Grid>
-</Window>
+</pmscomponents:PMSWindow>

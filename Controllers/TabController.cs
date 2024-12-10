@@ -34,21 +34,23 @@ namespace PMS.Controllers
             {
                 // Disallow tab changes if we have unsaved changes
                 if (
-                    this._Win.UnsavedChangesLock && 
-                    !ChangesProtectionController.UnsavedChangesGuard()
+                    this._Win.ChangesProtectionController.UnsavedChangesLock && 
+                    !ChangesProtectionController.UnsavedChangesGuard(this._Win)
                 ) {
                     return;
                 }
 
-                this._Win.UnsavedChangesLock = false;
+                this._Win.ChangesProtectionController.UnsavedChangesLock = false;
 
                 // Update the internal value
                 _SelectedTab = value;
 
                 PaintTabItems();
-                LoadContent(_SelectedTab.Name, _SelectedTab.RenderContent);
+                LoadContent(_SelectedTab.Name, _SelectedTab.RenderContent, _TabLoadArg);
             }
         }
+
+        private object? _TabLoadArg = null;
 
         private WindowManager wm
         {
@@ -69,6 +71,12 @@ namespace PMS.Controllers
             {
                 this.SelectedTab = (TabContent<T>)TabItem.Value;
             }
+        }
+        
+        public void LoadTab(T tab, object? arg = null)
+        {
+            _TabLoadArg = arg;
+            this.SelectedTab = this._Tabs.First(t => t.Value!.Equals(tab));
         }
 
         private void PaintTabItems()
@@ -92,7 +100,7 @@ namespace PMS.Controllers
 
         }
 
-        public async void LoadContent(string name, Func<FrameworkElement> renderContent)
+        public async void LoadContent(string name, Func<object?, FrameworkElement> renderContent, object? arg = null)
         {
             Mouse.OverrideCursor = Cursors.Wait;
             this._Win.StatusBar.StatusText = $"Loading {name}...";
@@ -104,14 +112,17 @@ namespace PMS.Controllers
 
             this._TabsContent.Children.Clear();
             FrameworkElement Content = new WindowTabUnknown();
+
             try
             {
-                Content = renderContent();
+                Content = renderContent(arg);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
-                MessageBox.Show(
+
+                MessageBoxController.Show(
+                    this._Win,
                     $"We're sorry, something went wrong while displaying this content.\n\nError: {ex.ToString()}",
                     "Error",
                     MessageBoxButton.OK,
@@ -123,6 +134,8 @@ namespace PMS.Controllers
 
             Mouse.OverrideCursor = null;
             this._Win.StatusBar.StatusText = $"Ready";
+
+            _TabLoadArg = null;
         }
 
         private void Init()

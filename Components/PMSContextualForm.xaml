@@ -24,10 +24,10 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Orientation="Horizontal" Grid.Column="0">
-                <Button FontWeight="Bold" Click="OnPreviousRecord_Click" IsEnabled="{Binding CanGoBack, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <Button FontWeight="Bold" Click="OnPreviousRecord_Click" IsEnabled="{Binding CanGoBack, RelativeSource={RelativeSource AncestorType=UserControl}}" AutomationProperties.Name="Previous Record">
                     <pmscomponents:PMSIcon Source="{StaticResource ArrowLeftIcon}" Height="16" Width="16" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 </Button>
-                <Button FontWeight="Bold" Click="OnNextRecord_Click" IsEnabled="{Binding CanGoForward, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0,8,0">
+                <Button FontWeight="Bold" Click="OnNextRecord_Click" IsEnabled="{Binding CanGoForward, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0,8,0" AutomationProperties.Name="Next Record">
                     <pmscomponents:PMSIcon Source="{StaticResource ArrowRightIcon}" Height="16" Width="16" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 </Button>
                 <Label Name="FormNumber" FontWeight="Bold"></Label>

@@ -1,4 +1,5 @@
-﻿using PMS.Models;
+﻿using PMS.Controllers;
+using PMS.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,8 +15,10 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PMS.Components
 {
@@ -128,10 +131,12 @@ namespace PMS.Components
                 string errorMessage = string.Join(
                     "\n",
                     this.FieldErrors?
+                        .Where(kv => !kv.Key.Label.Contains(':')) // exclude relationship fieldss
                         .Select(kv => $"{kv.Key.Label}: {kv.Value}") ?? []
                 );
 
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    Parent,
                     $"Cannot save record as one or more fields have errors:\n\n{errorMessage}", 
                     "Error", 
                     MessageBoxButton.OK, 
@@ -204,7 +209,8 @@ namespace PMS.Components
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(
+                        MessageBoxController.Show(
+                            Parent,
                             $"Failed to render form field '{item.Label ?? nameof(item)}'.\n\nError: {ex.ToString()}",
                             "Error",
                             MessageBoxButton.OK,
@@ -227,7 +233,7 @@ namespace PMS.Components
             }
 
             RegisteredFields.Add(formItem, widget);
-            Debug.WriteLine($"(Contextual Form): Bound {formItem} to {widget}.");
+            LogController.WriteLine($"Bound {formItem} ({formItem.Label}) to {widget}.", LogCategory.ContextualForm);
         }
 
         public bool CanSubmitForm()
@@ -246,7 +252,7 @@ namespace PMS.Components
                 if (error != null)
                 {
                     this.FieldErrors.Add(formItem, error);
-                    Debug.WriteLine($"(Contextual Form): {formItem.Label}: {error}");
+                    LogController.WriteLine($"{formItem.Label}: {error}", LogCategory.ContextualForm);
                     continue;
                 }
             }

@@ -119,6 +119,15 @@ namespace PMS.Controllers
                         : null;
             }
 
+
+            if (model.Equals(typeof(Note)) || model.Equals(typeof(Prescription)))
+            {
+                // Only doctors and nurses can edit notes/prescriptions
+                return user.UserType == UserType.Doctor || user.UserType == UserType.Nurse
+                        ? user
+                        : null;
+            }
+
             return user;
         }
 
@@ -128,6 +137,14 @@ namespace PMS.Controllers
             {
                 // 2.1: Only admins and nurses can add new patients 
                 return user.UserType == UserType.Admin || user.UserType == UserType.Nurse
+                        ? user
+                        : null;
+            }
+
+            if (model.Equals(typeof (Note)) || model.Equals(typeof(Prescription)))
+            {
+                // Only doctors and nurses can create new notes/prescriptions
+                return user.UserType == UserType.Doctor || user.UserType == UserType.Nurse
                         ? user
                         : null;
             }

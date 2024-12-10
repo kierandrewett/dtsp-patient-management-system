@@ -77,7 +77,7 @@ namespace PMS.Controllers
                         }
                     } else
                     {
-                        Debug.WriteLine($"(Search Controller): Unable to search key '{prop.Name}' as it cannot be casted to a string.");
+                        LogController.WriteLine($"Unable to search key '{prop.Name}' as it cannot be casted to a string.", LogCategory.SearchController);
                     }
 
                     searchablePropValue = SanitiseInput(searchablePropValue);

@@ -78,5 +78,13 @@ namespace PMS.Components
             RaiseEvent(new RoutedEventArgs(DataItemDoubleClickEvent));
         }
 
+        private void OnDataItem_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter || e.Key == Key.Space)
+            {
+                e.Handled = true;
+                RaiseEvent(new RoutedEventArgs(DataItemDoubleClickEvent));
+            }
+        }
     }
 }

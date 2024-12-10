@@ -60,10 +60,10 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Label FontWeight="Medium" Content="{Binding ElementName=DataGrid, Path=InnerDataGrid.SelectedItems.Count}" ContentStringFormat="‎{0} item(s) selected" VerticalAlignment="Center" Margin="0,0,12,0" />
 
-                    <Button Content="View selected..." IsEnabled="{Binding HasSelectedItems}" Visibility="{Binding CanView, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
-                    <Button Content="Delete selected..." Background="{StaticResource BtnBackgroundDangerBrush}" Visibility="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" IsEnabled="{Binding HasSelectedItems}" Click="OnRequestDelete_Click" Margin="0,0,4,0" />
-                    <Button Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Visibility="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
-                    <Button Content="Create new..."  IsEnabled="{Binding CanCreate}" Visibility="{Binding CanCreate, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestNew_Click" />
+                    <Button Name="ViewButton" Content="View selected..." IsEnabled="{Binding HasSelectedItems}" Visibility="{Binding CanView, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
+                    <Button Name="DeleteButton" Content="Delete selected..." Background="{StaticResource BtnBackgroundDangerBrush}" Visibility="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" IsEnabled="{Binding HasSelectedItems}" Click="OnRequestDelete_Click" Margin="0,0,4,0" />
+                    <Button Name="EditButton" Content="Edit selected..." IsEnabled="{Binding HasSelectedItems}" Visibility="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestEditSelected_Click" Margin="0,0,4,0" />
+                    <Button Name="CreateButton" Content="Create new..."  IsEnabled="{Binding CanCreate}" Visibility="{Binding CanCreate, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityCollapsed}}" Click="OnRequestNew_Click" />
                 </StackPanel>
             </Grid>
 
@@ -80,15 +80,13 @@
             >
 
             </pmscomponents:PMSDataGrid>
-            
-            
         </Grid>
 
         <Grid Grid.Row="2" Name="PanelEdit" Visibility="Hidden" Margin="28,16,28,16">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
 
             <ScrollViewer Grid.Row="1" Margin="0,16,0,16">
                 <pmscomponents:PMSContextualForm 

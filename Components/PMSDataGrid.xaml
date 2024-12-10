@@ -19,6 +19,7 @@
         <DataGrid.Resources>
             <Style TargetType="DataGridRow">
                 <EventSetter Event="MouseDoubleClick" Handler="OnDataItem_DoubleClick" />
+                <EventSetter Event="PreviewKeyDown" Handler="OnDataItem_PreviewKeyDown" />
             </Style>
         </DataGrid.Resources>
         <DataGrid.Columns>

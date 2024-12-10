@@ -5,11 +5,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PMS.Pages"
              xmlns:pmscomponents="clr-namespace:PMS.Components"
+             xmlns:converters="clr-namespace:PMS.Util.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:NotNull x:Key="NotNull" />
+        <converters:VisibilityReverse x:Key="VisibilityReverse" />
+    </UserControl.Resources>
     <Grid Background="#f3f3f3">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -18,5 +22,141 @@
              Title="Overview" 
              Icon="{StaticResource HomeIcon}" 
         />
+
+        <Grid Margin="24,24,24,24" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="18" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0" Name="AppointmentsGrid">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <Label FontSize="18" FontWeight="Medium" Grid.Column="0">Upcoming appointments</Label>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="View all appointments" Click="OnAppointmentsView_Click" Margin="0,0,4,0" />
+                            <Button Content="View selected..." IsEnabled="{Binding HasAppointmentsSelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" Click="OnAppointmentsViewSelected_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <pmscomponents:PMSNoRecordsFound x:Name="AppointmentsErrorBoundary" Grid.Row="2" />
+                    <pmscomponents:PMSDataGrid 
+                        x:Name="AppointmentsDataGrid"
+                        Grid.Row="2"
+                        Padding="4,4,4,4"
+                        DataSource="{Binding AppointmentsDataSource, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                        DataItemDoubleClick="OnAppointmentsViewSelected_Click"
+                        SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
+                        Visibility="Hidden"
+                    />
+                </Grid>
+
+                <Grid Grid.Row="0" Name="UsersGrid">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <Label FontSize="18" FontWeight="Medium" Grid.Column="0">Users</Label>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="View all users" Click="OnUsersView_Click" Margin="0,0,4,0" />
+                            <Button Content="View selected..." IsEnabled="{Binding HasUsersSelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" Click="OnUsersViewSelected_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <pmscomponents:PMSNoRecordsFound x:Name="UsersErrorBoundary" Grid.Row="2" />
+                    <pmscomponents:PMSDataGrid 
+                        x:Name="UsersDataGrid"
+                        Grid.Row="2"
+                        Padding="4,4,4,4"
+                        DataSource="{Binding UsersDataSource, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                        DataItemDoubleClick="OnUsersViewSelected_Click"
+                        SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
+                        Visibility="Hidden"
+                    />
+                </Grid>
+
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Label FontSize="18" FontWeight="Medium" Grid.Row="0">My details</Label>
+
+                    <StackPanel Orientation="Vertical" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <pmscomponents:PMSIcon Width="40" Height="40" Source="{StaticResource PersonIcon}" />
+                            <StackPanel Orientation="Vertical" Margin="4,0,0,0">
+                                <Label FontSize="14" FontWeight="Medium" Content="{Binding UserFullName, RelativeSource={RelativeSource AncestorType=UserControl}}"></Label>
+                                <Label Margin="0,-8,0,0" FontSize="12" Content="{Binding UserSubtitleText, RelativeSource={RelativeSource AncestorType=UserControl}}"></Label>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Row="2" Name="PatientsGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <Label FontSize="18" FontWeight="Medium" Grid.Column="0">My patients</Label>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="View all patients" Click="OnPatientsView_Click" Margin="0,0,4,0" />
+                        <Button Content="View selected..." IsEnabled="{Binding HasPatientSelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" Click="OnPatientsViewSelected_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <pmscomponents:PMSNoRecordsFound x:Name="PatientsErrorBoundary" Grid.Row="2" />
+                <pmscomponents:PMSDataGrid 
+                    x:Name="PatientsDataGrid"
+                    Grid.Row="2"
+                    Padding="4,4,4,4"
+                    DataSource="{Binding PatientsDataSource, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                    DataItemDoubleClick="OnPatientsViewSelected_Click"
+                    SelectedCellsChanged="OnDataGrid_SelectedCellsChanged"
+                    Visibility="Hidden"
+                />
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

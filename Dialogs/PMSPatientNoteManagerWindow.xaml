@@ -1,0 +1,22 @@
+﻿<pmscomponents:PMSLockableWindow x:Class="PMS.Dialogs.PMSPatientNoteManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PMS.Dialogs"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
+        mc:Ignorable="d"
+        Title="{Binding ComputedTitle, UpdateSourceTrigger=PropertyChanged}" Height="700" Width="700" WindowStartupLocation="CenterScreen">
+    <pmscomponents:PMSDataManager
+        x:Name="DataManager"
+        PanelTitle="Notes"
+        PanelIcon="{StaticResource PersonNotesIcon}"
+        DataSource="{Binding Notes.DataSource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        Columns="{Binding Notes.Columns, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        Form="{Binding Notes.Form, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"    
+        Model="{Binding Notes.Model, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        ColumnSort="{Binding Notes.ColumnSort, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        CanEdit="{Binding Notes.CanEdit, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        CanCreate="{Binding Notes.CanCreate, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+    />
+</pmscomponents:PMSLockableWindow>

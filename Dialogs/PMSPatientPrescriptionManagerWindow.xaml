@@ -1,0 +1,22 @@
+﻿<pmscomponents:PMSLockableWindow x:Class="PMS.Dialogs.PMSPatientPrescriptionManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PMS.Dialogs"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
+        mc:Ignorable="d"
+        Title="{Binding ComputedTitle, UpdateSourceTrigger=PropertyChanged}" Height="700" Width="900" WindowStartupLocation="CenterScreen">
+    <pmscomponents:PMSDataManager
+        x:Name="DataManager"
+        PanelTitle="Prescriptions"
+        PanelIcon="{StaticResource PersonMedicineIcon}"
+        DataSource="{Binding Prescriptions.DataSource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        Columns="{Binding Prescriptions.Columns, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        Form="{Binding Prescriptions.Form, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"    
+        Model="{Binding Prescriptions.Model, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        ColumnSort="{Binding Prescriptions.ColumnSort, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        CanEdit="{Binding Prescriptions.CanEdit, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+        CanCreate="{Binding Prescriptions.CanCreate, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pmscomponents:PMSLockableWindow}}}"
+    />
+</pmscomponents:PMSLockableWindow>

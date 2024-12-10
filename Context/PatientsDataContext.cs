@@ -1,22 +1,70 @@
-﻿using PMS.Controllers;
+﻿using PMS.Components;
+using PMS.Controllers;
+using PMS.Dialogs;
 using PMS.Models;
 using PMS.Util;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace PMS.Context
 {
     public class PatientsDataContext : DataContext<Patient>
     {
-        public PatientsDataContext()
+        public int? AssignedDoctorID { get; set; }
+
+        public PatientsDataContext(int? assignedDoctorID = null)
         {
+            AssignedDoctorID = assignedDoctorID;
+
+            Refresh();
+        }
+
+        public override string GetAccessibleName(Patient cell)
+        {
+            return "";
+        }
+
+        public override void Refresh()
+        {
+            WindowManager wm = (WindowManager)Application.Current.MainWindow;
+
+            static bool OpenNoteManager(PMSContextualForm form)
+            {
+                string patientID = form.GetFieldValue("ID")?.ToString()!;
+                PMSPatientNoteManagerWindow pnmWin = new(patientID);
+
+                bool result = pnmWin.ShowDialog() ?? true;
+
+                return result;
+            }
+
+            static bool OpenPrescriptionManager(PMSContextualForm form)
+            {
+                string patientID = form.GetFieldValue("ID")?.ToString()!;
+                PMSPatientPrescriptionManagerWindow ppmWin = new(patientID);
+
+                bool result = ppmWin.ShowDialog() ?? true;
+
+                return result;
+            }
+
+            string userEditKeyword = PermissionController.CanEditRecord(wm.AuthorisedUser, typeof(Patient)) != null ? "Manage" : "View";
+
+            Patient[]? PatientsList = AssignedDoctorID != null 
+                ? Patient.GetAllPatientsForDoctor((int)AssignedDoctorID) 
+                : Patient.GetAllPatients();
+
             Model = typeof(Patient);
-            DataSource = Patient.GetAllPatients() ?? Array.Empty<Patient>();
+            DataSource = PatientsList ?? Array.Empty<Patient>();
             Columns = new()
             {
                 // "Model Property" - "Column Display Name"
@@ -46,6 +94,7 @@ namespace PMS.Context
                 { "ReadableAddress", "Address" },
                 { "FormattedNHSNumber", "NHS Number" },
             };
+            ColumnSort = new SortDescription(nameof(Patient.ID), ListSortDirection.Ascending);
             Form = [
                 new FormItemGroup([
                     new FormItemText {
@@ -159,9 +208,25 @@ namespace PMS.Context
                         Label = "Postcode",
                         DataBinding = "ComputedAddress.Postcode",
                     }
-                ], "Address")
-            ];
+                ], "Address"),
+                new FormItemGroup([
+                    new FormItemButton {
+                        Label = "Notes",
+                        ForceEnable = true,
+                        ButtonLabel = userEditKeyword + " patient notes...",
+                        OnClick = (form) => OpenNoteManager(form),
+                        Hidden = (form) => form.IsNewEntry
+                    },
+                    new FormItemButton {
+                        Label = "Prescriptions",
+                        ForceEnable = true,
+                        ButtonLabel = userEditKeyword + " patient prescriptions...",
+                        OnClick = (form) => OpenPrescriptionManager(form),
+                        Hidden = (form) => form.IsNewEntry
+                    }
+                ]),
 
+            ];
         }
     }
 }

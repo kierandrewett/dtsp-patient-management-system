@@ -1,11 +1,12 @@
-﻿<Window x:Class="PMS.Dialogs.PMSAccountRecoverySelfServiceWindow"
+﻿<pmscomponents:PMSWindow x:Class="PMS.Dialogs.PMSAccountRecoverySelfServiceWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PMS.Dialogs"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
         mc:Ignorable="d"
-        Title="Recover my account" Height="600" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+        Title="Recover my account" Height="600" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" Topmost="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="8"/>
@@ -68,4 +69,4 @@
 
         </Grid>
     </Grid>
-</Window>
+</pmscomponents:PMSWindow>

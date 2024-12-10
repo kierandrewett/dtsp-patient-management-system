@@ -1,4 +1,6 @@
-﻿using PMS.Models;
+﻿using PMS.Components;
+using PMS.Controllers;
+using PMS.Models;
 using PMS.Util;
 using System;
 using System.Collections.Generic;
@@ -21,7 +23,7 @@ namespace PMS.Dialogs
     /// <summary>
     /// Interaction logic for PMSPasswordChangeWindow.xaml
     /// </summary>
-    public partial class PMSPasswordChangeWindow : Window
+    public partial class PMSPasswordChangeWindow : PMSWindow
     {
         private User TargetUser;
 
@@ -30,7 +32,7 @@ namespace PMS.Dialogs
             get => TargetUser.Username;
         }
 
-        public PMSPasswordChangeWindow(User TargetUser)
+        public PMSPasswordChangeWindow(User TargetUser) : base()
         {
             this.TargetUser = TargetUser;
 
@@ -38,7 +40,7 @@ namespace PMS.Dialogs
 
             DataContext = this;
 
-            Debug.WriteLine($"(Password Change Window): Prompted to change password for '{TargetUser.Username}'.");
+            LogController.WriteLine($"Prompted to change password for '{TargetUser.Username}'.", LogCategory.PasswordChangeWindow);
 
             UpdatePasswordRequirements();
         }
@@ -90,7 +92,8 @@ namespace PMS.Dialogs
 
             if (passwordChangedRequest.IsErr())
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     passwordChangedRequest.Error.Message,
                     "Error",
                     MessageBoxButton.OK,
@@ -103,7 +106,8 @@ namespace PMS.Dialogs
 
             if (passwordChangedRequest.Value == true)
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     $"The password for user '{TargetUser.Username}' has been successfully updated.",
                     "Password changed",
                     MessageBoxButton.OK,

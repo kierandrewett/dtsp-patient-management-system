@@ -23,7 +23,7 @@
             <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                 <StackPanel Visibility="{Binding CanGoBack, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityCollapsed}}">
                     <TextBlock>
-                     <Hyperlink Click="OnBackButtonClicked" TextDecorations="None">
+                     <Hyperlink Click="OnBackButtonClicked" TextDecorations="None" AutomationProperties.Name="Go Back">
                          <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                              <pmscomponents:PMSIcon Width="18" Height="18" Source="{StaticResource ArrowLeftIcon}" />
                              <Label Content="Back" VerticalAlignment="Center" FontSize="15" FontWeight="Medium" />
@@ -49,6 +49,7 @@
                                 <pmscomponents:PMSIcon Width="16" Height="16" Source="{StaticResource SearchIcon}" />
                                 <Label Content="Search" FontWeight="Medium" />
                             </StackPanel>
+                            <Label Content="Search" FontWeight="Medium" Visibility="Collapsed" />
                             <TextBox Width="200" Height="20" Name="SearchBox" TextInput="OnSearchBoxUpdated" LostFocus="OnSearchBoxUpdated" TextChanged="OnSearchBoxUpdated" />
                         </StackPanel>
 

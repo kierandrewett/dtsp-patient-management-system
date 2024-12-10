@@ -1,8 +1,10 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using PMS.Controllers;
 using PMS.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.OleDb;
 using System.Diagnostics;
 using System.Linq;
@@ -39,7 +41,10 @@ namespace PMS
 
         private static object SerialiseValue(PropertyInfo property, object value)
         {
-            Debug.WriteLine($"(Database ORM Reflection): Currently processing: {property.Name}: {property.PropertyType}");
+            LogController.WriteLine(
+                $"Currently processing: {property.Name}: {property.PropertyType}", 
+                LogCategory.DBORMReflection
+            );
 
             // Special case for enums to handle the conversion
             if (property.PropertyType.IsEnum)
@@ -59,7 +64,10 @@ namespace PMS
 
         private static object DeserialiseValue(PropertyInfo property, object value)
         {
-            Debug.WriteLine($"(Database ORM Reflection): Currently processing: {property.Name}: {property.PropertyType}");
+            LogController.WriteLine(
+                $"Currently processing: {property.Name}: {property.PropertyType}", 
+                LogCategory.DBORMReflection
+            );
 
             // Special case for enums to handle the conversion
             if (property.PropertyType.IsEnum)
@@ -87,12 +95,21 @@ namespace PMS
 
             OleDbCommand command = new OleDbCommand(query, conn);
 
-            foreach (string arg in args)
+            string argStr = "";
+
+            for (int i = 0; i < args.Length; i++)
             {
-                command.Parameters.AddWithValue("?", arg);
+                if (args[i] == null)
+                {
+                    Debug.WriteLine($"!!! Argument {i} is null! Query: {query}");
+                }
+
+                argStr += $"    {i}: {args[i]}\n";
+
+                command.Parameters.AddWithValue("?", args[i]);
             }
 
-            Debug.WriteLine($"(Database): Executing query '{query}'...");
+            LogController.WriteLine($"Executing query '{query}'...\n{argStr}", LogCategory.DB);
 
             return command.ExecuteReader();
         }
@@ -100,33 +117,21 @@ namespace PMS
         public static string[]? QueryColumnNames(string table)
         {
             OleDbConnection conn = CreateConnection();
-            OleDbDataReader reader = ExecuteQuery(conn, $"SELECT * FROM {table}", []);
 
             List<string> columns = [];
 
-            try
+            DataTable schemaTable = conn.GetSchema("Columns", new string[] { null, null, table, null });
+            foreach (DataRow row in schemaTable.Rows)
             {
-                if (reader.Read())
-                {
-                    for (int i = 0; i < reader.VisibleFieldCount; i++)
-                    {
-                        var fieldName = reader.GetName(i);
+                string? columnName = row["COLUMN_NAME"]?.ToString();
 
-                        columns.Add(fieldName);
-                    }
+                if (columnName != null)
+                {
+                    columns.Add(columnName);
                 }
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error querying database: {ex.ToString()}");
 
-                return null;
-            }
-            finally
-            {
-                reader?.Close();
-                conn?.Close();
-            }
+            conn?.Close();
 
             return [.. columns];
         }
@@ -163,7 +168,7 @@ namespace PMS
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error querying database: {ex.ToString()}");
+                LogController.WriteLine($"Error querying database: {ex.ToString()}", LogCategory.DB);
 
                 return null;
             }
@@ -204,7 +209,7 @@ namespace PMS
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error querying database: {ex.ToString()}");
+                LogController.WriteLine($"Error querying database: {ex.ToString()}", LogCategory.DB);
 
                 return null;
             }
@@ -220,7 +225,10 @@ namespace PMS
             string modelTable = model.ORM_TABLE;
             string modelPrimaryKey = model.ORM_PRIMARY_KEY;
 
-            Debug.WriteLine($"(Database ORM): Attempting to write model object '{modelName}' to database...");
+            LogController.WriteLine(
+                $"Attempting to write model object '{modelName}' to database...",
+                LogCategory.DBORM
+            );
 
             if (
                 modelTable == null ||
@@ -343,11 +351,6 @@ namespace PMS
 
                 // Add values
                 queryArgs.AddRange(values);
-            }
-
-            for (int i = 0; i < queryArgs.Count; i++)
-            {
-                Debug.WriteLine(i + ": " + queryArgs[i]);
             }
 
             // This will likely fail due to relationships

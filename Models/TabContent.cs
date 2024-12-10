@@ -12,7 +12,7 @@ namespace PMS.Models
         public T Value { get; set; }
         public string Name { get; set; }
         
-        public Func<FrameworkElement> RenderContent { get; set; }
+        public Func<object?, FrameworkElement> RenderContent { get; set; }
 
         private Func<T, bool> _VisibleFn;
 
@@ -21,7 +21,7 @@ namespace PMS.Models
             get { return this._VisibleFn(Value); }
         }
 
-        public TabContent(T Value, string Name, Func<FrameworkElement> RenderContent, Func<T, bool> VisibleFn)
+        public TabContent(T Value, string Name, Func<object?, FrameworkElement> RenderContent, Func<T, bool> VisibleFn)
         {
             this.Value = Value;
             this.Name = Name;

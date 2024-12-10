@@ -1,0 +1,52 @@
+﻿<pmscomponents:PMSWindow x:Class="PMS.Dialogs.PMSSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PMS.Dialogs"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
+        mc:Ignorable="d"
+        Title="Settings" Height="300" SizeToContent="Height" Width="500" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True">
+    <Grid Background="#f3f3f3">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+
+        </Grid.RowDefinitions>
+        <pmscomponents:PMSContentHeader 
+             Grid.Row="0" 
+             Title="Settings" 
+             Icon="{StaticResource SettingsIcon}" 
+        />
+        <StackPanel Grid.Row="1" Margin="24,24,24,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
+                <CheckBox IsChecked="{Binding Settings.IsTTSEnabled, FallbackValue=False, TargetNullValue=False}" IsThreeState="False" Name="TTSCheckbox" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Label Target="{Binding ElementName=TTSCheckbox}">Enable Text-to-Speech</Label>
+            </StackPanel>
+
+            <StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,0,0,0" IsEnabled="{Binding IsChecked, ElementName=TTSCheckbox}">
+                <Label Target="{Binding ElementName=TTSCheckbox}">Speech dictation speed (1 = Slowest, 20 = Fastest)</Label>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Slider 
+                        Value="{Binding Settings.TTSSpeechRate, FallbackValue=5, TargetNullValue=5}" 
+                        Minimum="0" 
+                        Maximum="10" 
+                        TickPlacement="BottomRight"
+                        TickFrequency="1"
+                        IsSnapToTickEnabled="True"
+                        Name="TTSSpeechRate" 
+                        Width="150"
+                        MaxWidth="150"
+                        VerticalAlignment="Center"
+                    />
+                    <Label Content="{Binding Value, ElementName=TTSSpeechRate}" />
+                </StackPanel>
+            </StackPanel>
+
+        </StackPanel>
+
+        <Button Grid.Row="5" Margin="24,24,24,24" Click="OnSaveButton_Click">Save</Button>
+
+    </Grid>
+</pmscomponents:PMSWindow>

@@ -12,8 +12,10 @@ namespace PMS.Models
     {
         Unknown = 0,
         Scheduled = 1,
-        Completed = 2,
-        Cancelled = 3
+        CancelledByPatient = 2,
+        CancelledByDoctor = 3,
+        Completed = 4,
+        InProgress = 5
     }
 
     public class AppointmentStatusObject : PropertyObservable
@@ -66,13 +68,12 @@ namespace PMS.Models
 
     public enum AppointmentReason
     {
-        Unknown = 0,
-        Other = 1,
-        CheckUp = 2,
-        FollowUp = 3,
-        Exam = 4,
-        Procedure = 5,
-        Surgery = 6
+        Other = 0,
+        CheckUp = 1,
+        FollowUp = 2,
+        Exam = 3,
+        Procedure = 4,
+        Surgery = 5
     }
 
     public class AppointmentReasonObject : PropertyObservable
@@ -166,7 +167,13 @@ namespace PMS.Models
         }
         public string FormattedDateScheduledStart
         {
-            get => DateHelper.ConvertToString(DateScheduledStart, true);
+            get {
+                string dtDate = DateScheduledStart.ToShortDateString();
+
+                DateTime dt = DateTime.Parse($"{dtDate} {TimeScheduledStart ?? "12:00"}");
+
+                return DateHelper.ConvertToString(dt, true);
+            }
         }
 
         protected DateTime _DateScheduledEnd;
@@ -181,7 +188,36 @@ namespace PMS.Models
         }
         public string FormattedDateScheduledEnd
         {
-            get => DateHelper.ConvertToString(DateScheduledEnd, true);
+            get
+            {
+                string dtDate = DateScheduledEnd.ToShortDateString();
+
+                DateTime dt = DateTime.Parse($"{dtDate} {TimeScheduledEnd ?? "12:00"}");
+
+                return DateHelper.ConvertToString(dt, true);
+            }
+        }
+
+        protected string _TimeScheduledStart;
+        public string TimeScheduledStart
+        {
+            get { return _TimeScheduledStart; }
+            set
+            {
+                _TimeScheduledStart = value;
+                DidUpdateProperty("TimeScheduledStart");
+            }
+        }
+
+        protected string _TimeScheduledEnd;
+        public string TimeScheduledEnd
+        {
+            get { return _TimeScheduledEnd; }
+            set
+            {
+                _TimeScheduledEnd = value;
+                DidUpdateProperty("TimeScheduledEnd");
+            }
         }
 
         protected string _PatientID;
@@ -274,14 +310,63 @@ namespace PMS.Models
             }
         }
 
-        protected string _Notes;
-        public string Notes
+        public AppointmentStatus ComputedStatus
         {
-            get { return _Notes; }
+            get
+            {
+                if (
+                    Status != AppointmentStatus.Scheduled &&
+                    Status != AppointmentStatus.InProgress &&
+                    Status != AppointmentStatus.Completed
+                )
+                {
+                    return Status;
+                }
+
+                if (DateScheduledStart < DateTime.Now && DateScheduledEnd > DateTime.Now)
+                {
+                    return AppointmentStatus.InProgress;
+                }
+                else if (DateScheduledStart > DateTime.Now)
+                {
+                    return AppointmentStatus.Scheduled;
+                }
+                else if (DateScheduledEnd < DateTime.Now)
+                {
+                    return AppointmentStatus.Completed;
+                }
+
+                return Status;
+            }
+        }
+
+        protected int _Note;
+        public int Note
+        {
+            get { return _Note; }
             set
             {
-                _Notes = value;
-                DidUpdateProperty("Notes");
+                _Note = value;
+                DidUpdateProperty("Note");
+            }
+        }
+
+        protected Note? _ComputedNote;
+        public Note? ComputedNote
+        {
+            get {
+                if (_ComputedNote == null)
+                {
+                    _ComputedNote ??= AppDatabase.QueryFirst<Note>("SELECT * FROM tblNote WHERE ID=?", [Note.ToString()]);
+                    return _ComputedNote;
+                }
+
+                return _ComputedNote;
+            }
+            set
+            {
+                _ComputedNote = value;
+                DidUpdateProperty("ComputedNote");
             }
         }
 
@@ -296,13 +381,25 @@ namespace PMS.Models
             }
         }
 
-        public string DepartmentWithID
+        protected DepartmentObject? _DepartmentObject;
+        public DepartmentObject? DepartmentObject
         {
             get
             {
-                return $"{(int)Department} - {Department}";
+                _DepartmentObject ??= AppDatabase.QueryFirst<DepartmentObject>(
+                        "SELECT * FROM tblDepartment WHERE ID=?",
+                        [((int)Department).ToString()]
+                    );
+
+                return _DepartmentObject;
             }
         }
+
+        public string DepartmentWithID
+        {
+            get => $"{(int)Department} - {DepartmentObject?.Department ?? "Unknown"}";
+        }
+
 
         protected AppointmentReason _Reason;
         public AppointmentReason Reason
@@ -323,22 +420,28 @@ namespace PMS.Models
             }
 
             return AppDatabase.QueryAll<Appointment>(
-                "SELECT * FROM tblAppointment WHERE DoctorID=?",
+                "SELECT * FROM tblAppointment WHERE DoctorID=? AND DateScheduledStart > Date() OR (DateScheduledStart <= Date() AND DateScheduledEnd > Date())",
                 [authorisedUser?.ID.ToString() ?? ""]
             );
         }
 
-        // PRS-DEPARTMENT-DATE_ADDED-SEQUENCE_NUMBER
-        public static string GenerateAppointmentID(Department department)
+        public static Appointment[]? GetAllAppointmentsForDoctorID(int doctorID)
+        {
+            return AppDatabase.QueryAll<Appointment>(
+                "SELECT * FROM tblAppointment WHERE DoctorID=?",
+                [doctorID.ToString()]
+            );
+        }
+
+        // PRS-DATE_ADDED-SEQUENCE_NUMBER
+        public static string GenerateAppointmentID()
         {
             DateTime dt = DateTime.Now;
 
-            string departmentID = ((int)department).ToString();
-
-            int currentSequence = AppDatabase.QueryCount<Patient>(
-                "SELECT * FROM tblAppointment WHERE Department=? AND DateCreated = Date()",
-                [departmentID]
-            );
+            int currentSequence = AppDatabase.QueryFirst<QueryCount>(
+                "SELECT COUNT(*) AS RecordCount FROM tblAppointment WHERE DateCreated = Date()",
+                []
+            )?.RecordCount ?? -10;
 
             string paddedDay = dt.Day.ToString().PadLeft(2, '0');
             string paddedMonth = dt.Month.ToString().PadLeft(2, '0');
@@ -350,7 +453,6 @@ namespace PMS.Models
 
             return string.Join("-", [
                 AppConstants.AppName,
-                departmentID,
                 formattedDate,
                 nextSequence
             ]).ToUpper();

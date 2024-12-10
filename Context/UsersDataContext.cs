@@ -5,6 +5,7 @@ using PMS.Models;
 using PMS.Util;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -58,7 +59,27 @@ namespace PMS.Context
 
         public UsersDataContext()
         {
+            Refresh();
+        }
+
+        public override void Refresh()
+        {
             string passwordHelpLabel = "Note: The plain-text password is only visible once during creation, keep a note of it.";
+
+            static Func<FormItemBase, PMSContextualForm, string?> IsAnswerFieldValid(string idx) {
+                return (field, form) =>
+                {
+                    string? question = form.GetFieldValue($"Question {idx}")?.ToString();
+                    string? answer = form.GetFieldValue($"Answer {idx}")?.ToString();
+
+                    if ((question != null && question != "0") && (!question.IsNullOrEmpty() && answer.IsNullOrEmpty()))
+                    {
+                        return $"Must specify Answer for Question {idx}.";
+                    }
+
+                    return null;
+                };
+            };
 
             Model = typeof(User);
             DataSource = User.GetAllUsers() ?? Array.Empty<User>();
@@ -71,10 +92,22 @@ namespace PMS.Context
                 { "Forenames", "Forename(s)" },
                 { "Surname", "Surname" },
                 { "UserType", "Type" },
+                { "DepartmentWithID", "Department" },
                 { "IsDisabled", "Account disabled" },
                 { "HasFirstLogin", "Logged in once?" },
+                { "FormattedDateCreated", "Date Created" },
 
             };
+            CompactColumns = new()
+            {
+                // "Model Property" - "Column Display Name"
+                { "ID", "ID" },
+                { "Title", "Title" },
+                { "Username", "Username" },
+                { "Forenames", "Forename(s)" },
+                { "Surname", "Surname" },
+            };
+            ColumnSort = new SortDescription(nameof(User.ID), ListSortDirection.Ascending);
             Form = [
                 new FormItemGroup([
                     new FormItemText {
@@ -120,6 +153,23 @@ namespace PMS.Context
                             return null;
                         }
                     },
+                    new FormItemCombo<Department> {
+                        Label = "Department",
+                        Required = true,
+                        DataBinding = nameof(User.Department),
+                        Options = DepartmentObject.GetAllDepartmentOptions(),
+                        DefaultValue = (_) => Department.General,
+                    },
+                    new FormItemDatePicker {
+                        Label = "Date created",
+                        Required = true,
+                        DataBinding = nameof(User.DateCreated),
+                        DatePickerFormat = DatePickerFormat.Long,
+                        IsReadOnly = (_) => true,
+                        DefaultValue = (_) => DateTime.Now
+                    }
+                ]),
+                new FormItemGroup([
                     new FormItemButton {
                         Label = "Password update",
                         ButtonLabel = "Update password...",
@@ -149,8 +199,8 @@ namespace PMS.Context
                         IsReadOnly = (_) => true,
                         HelpLabel = passwordHelpLabel,
                         DefaultValue = (_) => User.GeneratePassword(),
-                        SerialiseWith = (value) => value != null 
-                            ? PasswordHelper.HashPassword((string)value!) 
+                        SerialiseWith = (value) => value != null
+                            ? PasswordHelper.HashPassword((string)value!)
                             : "",
                         DataBinding = "HashedPassword"
                     },
@@ -172,7 +222,7 @@ namespace PMS.Context
                         IsReadOnly = (form) => form.IsNewEntry,
                         DataBinding = nameof(User.HasFirstLogin),
                         DefaultValue = (form) => !form.IsNewEntry,
-                        HelpLabel = "Disabling this will enforce a user password reset upon login."
+                        HelpLabel = "Disabling this will enforce a self-service user password reset upon login."
                     }
                 ]),
                 new FormItemGroup([
@@ -201,6 +251,94 @@ namespace PMS.Context
                         Options = UserTypeObject.GetAllUserTypeOptions([UserType.Patient])
                     }
                 ]),
+                new FormItemGroup([
+                    new FormItemGroup([
+                        /* Begin tblUser:SecurityQuestion1 <-> tblUserSecurityQuestion:UserID relationship */
+                        new FormItemText {
+                            Label = "tblUser:SecurityQuestion1",
+                            DataBinding = "SecurityQuestion1",
+                            IsReadOnly = (_) => true,
+                            Hidden = (_) => true,
+                            DefaultValue = (form) => {
+                                string userID = form.GetFieldValue("ID")?.ToString()!;
+
+                                return $"{userID}-1";
+                            }
+                        },
+                        new FormItemText {
+                            Label = "tblUserSecurityQuestion:QuestionAnswerID",
+                            DataBinding = "ComputedSecurityQuestion1.QuestionAnswerID",
+                            IsReadOnly = (_) => true,
+                            Hidden = (_) => true,
+                            DefaultValue = (form) => {
+                                string userID = form.GetFieldValue("ID")?.ToString()!;
+
+                                return $"{userID}-1";
+                            }
+                        },
+                        new FormItemText {
+                            Label = "tblUserSecurityQuestion:UserID",
+                            DataBinding = "ComputedSecurityQuestion1.UserID",
+                            IsReadOnly = (_) => true,
+                            Hidden = (_) => true,
+                            DefaultValue = (form) => form.GetFieldValue("ID")?.ToString()!
+                        },
+                        /* End relationship */
+                        new FormItemCombo<int> {
+                            Label = "Question 1",
+                            DataBinding = "ComputedSecurityQuestion1.SecurityQuestionID",
+                            Options = SecurityQuestion.GetSecurityQuestionOptions(),
+                        },
+                        new FormItemText {
+                            Label = "Answer 1",
+                            DataBinding = "ComputedSecurityQuestion1.Answer",
+                            IsFieldValid = IsAnswerFieldValid("1")
+                        },
+                    ], "Security Question 1"),
+                    new FormItemGroup([
+                        /* Begin tblUser:SecurityQuestion2 <-> tblUserSecurityQuestion:UserID relationship */
+                        new FormItemText {
+                            Label = "tblUser:SecurityQuestion2",
+                            DataBinding = "SecurityQuestion2",
+                            IsReadOnly = (_) => true,
+                            Hidden = (_) => true,
+                            DefaultValue = (form) => {
+                                string userID = form.GetFieldValue("ID")?.ToString()!;
+
+                                return $"{userID}-2";
+                            }
+                        },
+                        new FormItemText {
+                            Label = "tblUserSecurityQuestion:QuestionAnswerID",
+                            DataBinding = "ComputedSecurityQuestion2.QuestionAnswerID",
+                            IsReadOnly = (_) => true,
+                            Hidden = (_) => true,
+                            DefaultValue = (form) => {
+                                string userID = form.GetFieldValue("ID")?.ToString()!;
+
+                                return $"{userID}-2";
+                            }
+                        },
+                        new FormItemText {
+                            Label = "tblUserSecurityQuestion:UserID",
+                            DataBinding = "ComputedSecurityQuestion2.UserID",
+                            IsReadOnly = (_) => true,
+                            Hidden = (_) => true,
+                            DefaultValue = (form) => form.GetFieldValue("ID")?.ToString()!
+                        },
+                        /* End relationship */
+                        new FormItemCombo<int> {
+                            Label = "Question 2",
+                            DataBinding = "ComputedSecurityQuestion2.SecurityQuestionID",
+                            Options = SecurityQuestion.GetSecurityQuestionOptions(),
+                        },
+                        new FormItemText {
+                            Label = "Answer 2",
+                            DataBinding = "ComputedSecurityQuestion2.Answer",
+                            IsFieldValid = IsAnswerFieldValid("2")
+                        },
+                    ], "Security Question 2"),
+                ])
             ];
         }
     }

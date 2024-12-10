@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using PMS.Components;
 using PMS.Controllers;
 using PMS.Models;
 using PMS.Util;
@@ -21,9 +22,9 @@ namespace PMS.Dialogs
     /// <summary>
     /// Interaction logic for PMSAccountRecoverySelfServiceWindow.xaml
     /// </summary>
-    public partial class PMSAccountRecoverySelfServiceWindow : Window
+    public partial class PMSAccountRecoverySelfServiceWindow : PMSWindow
     {
-        public PMSAccountRecoverySelfServiceWindow()
+        public PMSAccountRecoverySelfServiceWindow() : base()
         {
             InitializeComponent();
 
@@ -34,13 +35,19 @@ namespace PMS.Dialogs
 
         public string[]? SecurityQuestionStr
         {
-            get => AuthenticationController.GetAllSecurityQuestions()?
+            get => SecurityQuestion.GetAllSecurityQuestions()?
                     .Select(q => q.Question).ToArray();
         }
 
         private void LastResort_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Without the answers to your security questions, you will be unable to recover your account yourself. Please contact the system administrator for further steps.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBoxController.Show(
+                this, 
+                "Without the answers to your security questions, you will be unable to recover your account yourself. Please contact the system administrator for further steps.", 
+                "Information", 
+                MessageBoxButton.OK, 
+                MessageBoxImage.Information
+            );
         }
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
@@ -59,7 +66,8 @@ namespace PMS.Dialogs
 
             if (username.IsNullOrEmpty())
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     "Username must not be blank.",
                     "Error",
                     MessageBoxButton.OK,
@@ -70,7 +78,8 @@ namespace PMS.Dialogs
 
             if (question1ID < 0 || question1Answer.IsNullOrEmpty())
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     "Question 1 and Answer must not be blank.", 
                     "Error", 
                     MessageBoxButton.OK, 
@@ -81,7 +90,8 @@ namespace PMS.Dialogs
 
             if (question2ID < 0 || question2Answer.IsNullOrEmpty())
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     "Question 2 and Answer must not be blank.",
                     "Error",
                     MessageBoxButton.OK,
@@ -90,8 +100,8 @@ namespace PMS.Dialogs
                 return;
             }
 
-            SecurityQuestion? question1 = AuthenticationController.GetSecurityQuestionByID(question1ID);
-            SecurityQuestion? question2 = AuthenticationController.GetSecurityQuestionByID(question2ID);
+            SecurityQuestion? question1 = SecurityQuestion.GetSecurityQuestionByID(question1ID);
+            SecurityQuestion? question2 = SecurityQuestion.GetSecurityQuestionByID(question2ID);
 
             if (question1 == null || question2 == null)
             {
@@ -109,7 +119,8 @@ namespace PMS.Dialogs
 
             if (accountRecoveryResult.IsErr())
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     accountRecoveryResult.Error.Message,
                     "Error",
                     MessageBoxButton.OK,
@@ -125,7 +136,8 @@ namespace PMS.Dialogs
 
             if (passwordChangeResult.IsErr())
             {
-                MessageBox.Show(
+                MessageBoxController.Show(
+                    this,
                     passwordChangeResult.Error.Message,
                     "Error",
                     MessageBoxButton.OK,

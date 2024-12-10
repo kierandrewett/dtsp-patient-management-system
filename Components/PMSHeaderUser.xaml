@@ -11,7 +11,7 @@
             <MenuItem Header="{Binding UserFullName}" IsEnabled="False" />
             <MenuItem Header="{Binding UserRole}" HeaderStringFormat="Role: {0}" IsEnabled="False" />
             <Separator />
-            <MenuItem Header="Settings" />
+            <MenuItem Header="Settings" Click="Settings_Click" />
             <MenuItem Header="Log Off..." Click="LogOff_Click" />
         </ContextMenu>
     </UserControl.Resources>
@@ -20,7 +20,7 @@
             Foreground="{x:Null}" 
             BorderBrush="{x:Null}" 
             Padding="12,0,4,0"
-        Click="Button_Click">
+        Click="Button_Click" MouseDown="Button_MouseDown">
         <StackPanel Orientation="Horizontal">
             <local:PMSIcon Width="16" Height="16" Fill="White" Source="{StaticResource PersonIcon}" />
             <Label VerticalAlignment="Center" Foreground="White" Content="{Binding UserFullName}" />

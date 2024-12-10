@@ -1,0 +1,61 @@
+﻿<pmscomponents:PMSWindow x:Class="PMS.Dialogs.PMSSecurityQuestionsSetupSelfServiceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PMS.Dialogs"
+        xmlns:pmscomponents="clr-namespace:PMS.Components"
+        mc:Ignorable="d"
+        Title="Setup your security questions" Width="500" Height="550" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="8"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="32,32,32,32" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+
+                <RowDefinition />
+
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="1">
+                <StackPanel Grid.Row="1">
+                    <Label Content="{Binding Username}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,-6"></Label>
+                    <Label Content="Setup security questions" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="18"></Label>
+                    <TextBlock TextWrapping="Wrap" TextAlignment="Center">
+                        To recover your account in the event that you forget your password, you can set-up memorable questions and answers to help you regain entry to your account.
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Margin="0,16,0,16">
+                    <Label Content="Question 1" FontWeight="Bold" Margin="0,20,0,0" />
+                    <ComboBox Name="Question1" Margin="0,0,0,4" Padding="2,4,2,4" ItemsSource="{Binding SecurityQuestions}" DisplayMemberPath="Value" SelectedValuePath="Key" SelectedValue="{Binding SecurityQuestion1.SecurityQuestionID, Mode=OneWay}" />
+                    <Label Content="Answer" FontWeight="Bold" />
+                    <TextBox Name="Question1_Answer" Padding="2,4,2,4" Text="{Binding SecurityQuestion1.Answer, Mode=OneWay}" />
+
+                    <Label Content="Question 2" FontWeight="Bold" Margin="0,20,0,0" />
+                    <ComboBox Name="Question2" Margin="0,0,0,4" Padding="2,4,2,4" ItemsSource="{Binding SecurityQuestions}" DisplayMemberPath="Value" SelectedValuePath="Key" SelectedValue="{Binding SecurityQuestion2.SecurityQuestionID, Mode=OneWay}" />
+                    <Label Content="Answer" FontWeight="Bold" />
+                    <TextBox Name="Question2_Answer" Padding="2,4,2,4" Text="{Binding SecurityQuestion2.Answer, Mode=OneWay}" />
+                </StackPanel>
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" IsCancel="True" Content="Skip" HorizontalAlignment="Left" Padding="10,2,10,2" />
+                    <Button Grid.Column="1" Name="SubmitButton" IsDefault="True" Content="Set security questions" HorizontalAlignment="Right" Padding="10,2,10,2" Click="SetSQAnswers_Click"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</pmscomponents:PMSWindow>

@@ -328,15 +328,23 @@ namespace PMS.Models
             );
         }
 
+        public static Patient[]? GetAllPatientsForDoctor(int doctorID)
+        {
+            return AppDatabase.QueryAll<Patient>(
+                "SELECT * FROM tblPatient WHERE DoctorID=?",
+                [doctorID.ToString()]
+            );
+        }
+
         // PRS-DATE_ADDED-SEQUENCE_NUMBER
         public static string GeneratePatientID()
         {
             DateTime dt = DateTime.Now;
 
-            int currentSequence = AppDatabase.QueryCount<Patient>(
-                "SELECT * FROM tblPatient WHERE DateCreated = Date()",
+            int currentSequence = AppDatabase.QueryFirst<QueryCount>(
+                "SELECT COUNT(*) AS RecordCount FROM tblPatient WHERE DateCreated = Date()",
                 []
-            );
+            )?.RecordCount ?? -10;
 
             string paddedDay = dt.Day.ToString().PadLeft(2, '0');
             string paddedMonth = dt.Month.ToString().PadLeft(2, '0');
