@@ -42,8 +42,7 @@ namespace PMS.Pages
             WindowManager wm = (WindowManager)Application.Current.MainWindow;
             bool isAdmin = wm.AuthorisedUser?.UserType == UserType.Admin;
 
-            AppointmentsGrid.Visibility = !isAdmin ? Visibility.Visible : Visibility.Collapsed;
-            PatientsGrid.Visibility = !isAdmin ? Visibility.Visible : Visibility.Collapsed;
+            AppointmentsUsersGrid.Visibility = !isAdmin ? Visibility.Visible : Visibility.Collapsed;
             UsersGrid.Visibility = isAdmin ? Visibility.Visible : Visibility.Collapsed;
 
             if (isAdmin)

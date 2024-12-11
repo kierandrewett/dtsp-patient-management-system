@@ -777,7 +777,7 @@ namespace PMS.Components
 
                     if (rowsAffected == null || rowsAffected < 0)
                     {
-                        throw new Exception("No rows were affected.");
+                        throw AppDatabase.CurrentError ?? new Exception("No rows were affected.");
                     }
 
                     return;
@@ -798,7 +798,7 @@ namespace PMS.Components
             {
                 MessageBoxController.Show(
                     Parent,
-                    $"Failed to save record.\n\n{ex.ToString()}",
+                    $"Failed to save record:\n\n{ex.Message.ToString()}",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error

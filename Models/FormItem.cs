@@ -311,12 +311,21 @@ namespace PMS.Models
                 return baseValid;
             }
 
-            if (Required && this.RenderedWidget is TextBox textBox)
+            if (Required)
             {
-                if (textBox.Text.IsNullOrEmpty() || textBox.Text.Trim().Length < 0)
+                if (this.RenderedWidget is TextBox textBox)
                 {
-                    return "Field cannot be empty.";
+                    if (textBox.Text.IsNullOrEmpty() || textBox.Text.Trim().Length < 0)
+                    {
+                        return "Field cannot be empty.";
+                    }
+
+                    if (textBox.Text.Length > 255)
+                    {
+                        return "Field must be less than 255 characters long.";
+                    }
                 }
+                
             }
 
             if (IsFieldValid != null)

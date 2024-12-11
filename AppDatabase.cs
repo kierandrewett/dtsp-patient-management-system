@@ -31,10 +31,14 @@ namespace PMS
     {
         private static string CONNECTION_STRING = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=PMS.accdb";
 
+        public static Exception? CurrentError = null;
+
         public static OleDbConnection CreateConnection()
         {
             OleDbConnection conn = new(CONNECTION_STRING);
             conn.Open();
+
+            AppDatabase.CurrentError = null;
 
             return conn;
         }
@@ -138,13 +142,16 @@ namespace PMS
 
         public static T[]? QueryAll<T>(string query, string[] args) where T : class, new()
         {
-            OleDbConnection conn = CreateConnection();
-            OleDbDataReader reader = ExecuteQuery(conn, query, args);
-
-            List<T> queryResponse = new();
+            OleDbConnection? conn = null;
+            OleDbDataReader? reader = null;
 
             try
             {
+                conn = CreateConnection();
+                reader = ExecuteQuery(conn, query, args);
+
+                List<T> queryResponse = new();
+
                 while (reader.Read())
                 {
                     var objInstance = new T();
@@ -168,14 +175,22 @@ namespace PMS
             }
             catch (Exception ex)
             {
+                AppDatabase.CurrentError = ex;
                 LogController.WriteLine($"Error querying database: {ex.ToString()}", LogCategory.DB);
 
                 return null;
             }
             finally
             {
-                reader?.Close();
-                conn?.Close();
+                if (reader != null)
+                {
+                    reader?.Close();
+                }
+
+                if (conn != null)
+                {
+                    conn?.Close();
+                }
             }
         }
 
@@ -191,11 +206,13 @@ namespace PMS
 
         public static int? Update(string query, string[] args)
         {
-            OleDbConnection conn = AppDatabase.CreateConnection();
-            OleDbDataReader reader;
+            OleDbConnection? conn = null;
+            OleDbDataReader? reader = null;
 
             try
             {
+                conn = AppDatabase.CreateConnection();
+
                 reader = AppDatabase.ExecuteQuery(
                     conn,
                     query,
@@ -209,13 +226,17 @@ namespace PMS
             }
             catch (Exception ex)
             {
+                AppDatabase.CurrentError = ex;
                 LogController.WriteLine($"Error querying database: {ex.ToString()}", LogCategory.DB);
 
                 return null;
             }
             finally
             {
-                conn?.Close();
+                if (conn != null)
+                {
+                    conn?.Close();
+                }
             }
         }
 

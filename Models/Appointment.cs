@@ -236,10 +236,13 @@ namespace PMS.Models
         {
             get
             {
-                if (_Patient == null && !string.IsNullOrEmpty(PatientID))
+                if (_Patient == null)
                 {
-                    _Patient = Patient.GetPatientByID(PatientID);
+                    Patient? patient = Patient.GetPatientByID(PatientID);
+
+                    _Patient = patient;
                 }
+
                 return _Patient;
             }
         }
@@ -420,7 +423,7 @@ namespace PMS.Models
             }
 
             return AppDatabase.QueryAll<Appointment>(
-                "SELECT * FROM tblAppointment WHERE DoctorID=? AND DateScheduledStart > Date() OR (DateScheduledStart <= Date() AND DateScheduledEnd > Date())",
+                "SELECT * FROM tblAppointment WHERE DoctorID=? AND PatientID IN (SELECT ID FROM tblPatient) AND DateScheduledStart > Date() OR (DateScheduledStart <= Date() AND DateScheduledEnd > Date())",
                 [authorisedUser?.ID.ToString() ?? ""]
             );
         }
