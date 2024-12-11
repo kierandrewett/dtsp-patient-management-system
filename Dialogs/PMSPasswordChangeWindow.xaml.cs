@@ -82,6 +82,22 @@ namespace PMS.Dialogs
 
         }
 
+        private void PasswordField_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void PasswordConfirmField_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
         private void ChangePassword_Click(object sender, RoutedEventArgs e)
         {
             string newPassword = PasswordField.Password.Trim();
