@@ -475,6 +475,23 @@ namespace PMS.Components
             return (FrameworkElement?)this.FindName($"Panel{panel.ToString()}");
         }
 
+        private void UpdateManagerPanelVisibility()
+        {
+            if (GetPanelElement(DataManagerPanel.Default) is FrameworkElement defaultPanel)
+            {
+                defaultPanel.Visibility = SelectedPanel == DataManagerPanel.Default
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+
+            if (GetPanelElement(DataManagerPanel.Edit) is FrameworkElement editPanel)
+            {
+                editPanel.Visibility = SelectedPanel == DataManagerPanel.Edit
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+        }
+
         private async void SwapManagerPanel(DataManagerPanel? oldPanel, DataManagerPanel newPanel)
         {
             FrameworkElement? oldPanelEl = oldPanel != null 
@@ -498,6 +515,8 @@ namespace PMS.Components
                 newPanelEl.Focus();
 
                 _SelectedPanel = newPanel;
+
+                UpdateManagerPanelVisibility();
 
                 Mouse.OverrideCursor = null;
 
@@ -573,6 +592,8 @@ namespace PMS.Components
             EditingDataItemIndex = 0;
             DidUpdateProperty("EditingDataItem");
 
+            UpdateManagerPanelVisibility();
+
             UnsavedChangesLock = EditingDataItem == null ? CanCreate : CanEdit;
 
             if (Window.GetWindow(this) is PMSWindow window && DataSource != null)
@@ -589,6 +610,8 @@ namespace PMS.Components
                     true
                 );
             }
+
+            UpdateManagerPanelVisibility();
         }
 
         public void ExitEditMode()
@@ -659,6 +682,8 @@ namespace PMS.Components
                     Debug.WriteLine(ex);
                 }
             }
+
+            UpdateManagerPanelVisibility();
 
             RaiseEvent(new RoutedEventArgs(ManagerReadyEvent));
         }

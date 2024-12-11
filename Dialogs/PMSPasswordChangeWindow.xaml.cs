@@ -50,9 +50,9 @@ namespace PMS.Dialogs
             string password = PasswordField.Password.Trim();
 
             PasswordRequirement_CharsCount.IsChecked = password.Length >= AppConstants.PasswordMinLength;
-            PasswordRequirement_LowerUpperChars.IsChecked = Regex.IsMatch(password, "^(?=.*[a-z])(?=.*[A-Z]).*$");
+            PasswordRequirement_LowerUpperChars.IsChecked = Regex.IsMatch(password, "^(?=.*[a-zA-Z]).*$");
             PasswordRequirement_Numbers.IsChecked = Regex.IsMatch(password, "^(?=.*\\d).*");
-            PasswordRequirement_SpecialCharsCount.IsChecked = Regex.IsMatch(password, "(?:[^`!@#$%^&*\\-_=+'\\/.,]*[`!@#$%^&*\\-_=+'\\/.,]){2,}");
+            PasswordRequirement_SpecialCharsCount.IsChecked = Regex.IsMatch(password, "[`!@#$£%^&*\\\\\\--_=+'\\\\\\/.,(){}\\[\\]|;:\"<>~]{1,}");
             PasswordRequirement_Match.IsChecked = password.Length >= 1 && PasswordField.Password == PasswordConfirmField.Password;
 
             bool isPasswordValid = (
@@ -116,6 +116,16 @@ namespace PMS.Dialogs
 
                 Close();
             }
+        }
+
+        private void Button_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void Button_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+
         }
     }
 }

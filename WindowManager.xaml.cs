@@ -65,6 +65,9 @@ namespace PMS
             // Ensure the core window is hidden from view upon startup
             Hide();
 
+            // Check that we have seeded the database with our initial user
+            MaybeHandleNoUsers();
+
             // Launch the sign on window
             bool didSignIn = ShowSignOnWindow();
 
@@ -111,7 +114,7 @@ namespace PMS
         public bool ShowSignOnWindow()
         {
             SignOnWindow ??= new();
-            return (bool)SignOnWindow.ShowDialog() || false;
+            return (bool?)SignOnWindow.ShowDialog() ?? false;
         }
 
         public void ShowMainWindow()
@@ -172,6 +175,32 @@ namespace PMS
         public Result<bool, Exception> HandlePasswordChangeFinalRequest(User targetUser, string newPassword)
         {
             return AuthenticationController.HandlePasswordChangeFinalRequest(targetUser, newPassword, AuthorisedUser);
+        }
+
+        public Result<bool, Exception> MaybeHandleNoUsers()
+        {
+            Result<bool, Exception> result = AuthenticationController.MaybeHandleNoUsers();
+
+            if (result.IsErr())
+            {
+                MessageBox.Show(
+                    $"Failed to setup initial system user:\n\n{result.Error.ToString()}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+
+                Close();
+                Application.Current.Shutdown();
+            }
+
+            if (result.IsValue() && result.Value != true)
+            {
+                Close();
+                Application.Current.Shutdown();
+            }
+
+            return Result<bool, Exception>.Ok(result.Value);
         }
     }
 }

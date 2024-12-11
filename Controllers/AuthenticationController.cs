@@ -17,6 +17,7 @@ using PMS.Dialogs;
 using System.Security.Cryptography;
 using PMS.Components;
 using Microsoft.IdentityModel.Tokens;
+using System.CodeDom;
 
 namespace PMS.Controllers
 {
@@ -27,6 +28,7 @@ namespace PMS.Controllers
 
         private bool SecurityQuestionsVerifiedLock = false;
 
+        public static string DEFAULT_ADMIN_USERNAME = "root@prs.uk";
         private PMSWindow Window { get; set; }
 
         public AuthenticationController(PMSWindow window)
@@ -347,6 +349,116 @@ namespace PMS.Controllers
                     new Exception("No changes were committed to the database.")
                 );
             }
+        }
+
+        private Result<bool, Exception> DeleteOldAdminUser()
+        {
+            string qry = "DELETE FROM tblUser WHERE Username=?";
+            string[] qryArgs = [DEFAULT_ADMIN_USERNAME];
+
+            if (AppDatabase.QueryFirst<User>(qry, qryArgs) != null)
+            {
+                if (AppDatabase.Update(qry, qryArgs) <= 0)
+                {
+                    return Result<bool, Exception>.Err(new Exception("Unable to clean up old administrator user."));
+                }
+            }
+
+            return Result<bool, Exception>.Ok(true);
+        }
+
+        public Result<bool, Exception> MaybeHandleNoUsers()
+        {
+            int usersCount = AppDatabase.QueryFirst<QueryCount>(
+                "SELECT COUNT(*) AS RecordCount FROM tblUser WHERE IsDisabled=False",
+                []
+            )?.RecordCount ?? 0;
+
+            if (usersCount <= 0)
+            {
+                MessageBoxResult msgResult = MessageBoxController.Show(
+                      Window,
+                      $"Welcome to {AppConstants.AppName}.\n\nAs we haven't detected any users within the system, you will need to setup the administrator account to continue.\n\nBy default, the username for this account is 'root@prs.uk'.\nYou will be able to change this upon login.\n\nWould you like to continue with the creation of the administrator account?",
+                      $"Welcome to {AppConstants.AppName}",
+                      MessageBoxButton.YesNo,
+                      MessageBoxImage.Information,
+                      MessageBoxResult.Yes
+                );
+
+                if (msgResult != MessageBoxResult.Yes)
+                {
+                    Window.Close();
+                    Application.Current.Shutdown();
+
+                    return Result<bool, Exception>.Ok(true);
+                }
+
+                Result<bool, Exception> oldAdminUser = DeleteOldAdminUser();
+
+                if (oldAdminUser.IsErr())
+                {
+                    Debug.WriteLine("Failed to clean up old admin user, aborting...");
+
+                    return Result<bool, Exception>.Err(oldAdminUser.Error);
+                }
+
+                User adminUser = new()
+                {
+                    ID = User.GenerateUserID(),
+                    Username = DEFAULT_ADMIN_USERNAME,
+                    Forenames = "Administrator",
+                    HashedPassword = "",
+                    IsDisabled = true,
+                    HasFirstLogin = true, // Don't enforce a password reset upon first login
+                    DateCreated = DateTime.Now
+                };
+                AppDatabase.WriteModelUpdate(adminUser);
+
+                // Request a password change, but use the newly created admin as the authorised user.
+                //
+                // This bypasses our permission checks, as we have no way of validating this request
+                // without a real admin user.
+                //
+                // By creating a new admin user early and writing it to the db, we can act as if the
+                // user has always existed in the system.
+                Result<bool, Exception> result = HandlePasswordChangeRequest(adminUser, adminUser);
+
+                if (result.IsErr() || (result.IsValue() && result.Value == false))
+                {
+                    Result<bool, Exception> existingAdminUser = DeleteOldAdminUser();
+
+                    if (existingAdminUser.IsErr())
+                    {
+                        Debug.WriteLine("Failed to clean up existing admin user, aborting...");
+
+                        return Result<bool, Exception>.Err(existingAdminUser.Error);
+                    }
+                }
+
+                if (result.IsErr())
+                {
+                    return Result<bool, Exception>.Err(result.Error);
+                }
+
+                User? passwordSetUser = AppDatabase.QueryFirst<User>(
+                    "SELECT * FROM tblUser WHERE Username=?",
+                    [DEFAULT_ADMIN_USERNAME]
+                );
+
+                if (passwordSetUser == null)
+                {
+                    return Result<bool, Exception>.Err(
+                        new Exception("Failed to find administrator user in system after password change.")
+                    );
+                }
+
+                passwordSetUser.IsDisabled = false;
+                AppDatabase.WriteModelUpdate(passwordSetUser);
+
+                return Result<bool, Exception>.Ok(result.Value);
+            }
+
+            return Result<bool, Exception>.Ok(true);
         }
     }
 }

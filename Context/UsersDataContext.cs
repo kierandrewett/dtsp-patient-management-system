@@ -211,15 +211,36 @@ namespace PMS.Context
                             WindowManager wm = (WindowManager)Application.Current.MainWindow;
 
                             string? id = form.GetFieldValue("ID")?.ToString();
+                            string? username = form.GetFieldValue("Username")?.ToString();
 
-                            return id != null && wm.AuthorisedUser?.ID == int.Parse(id!);
+                            return id != null && (
+                                wm.AuthorisedUser?.ID == int.Parse(id!) ||
+                                (
+                                    username != null &&
+                                    username! == AuthenticationController.DEFAULT_ADMIN_USERNAME
+                                )
+                            );
                         },
                         DataBinding = nameof(User.IsDisabled)
                     },
                     new FormItemCheckbox {
                         Label = "Has first login?",
                         Required = true,
-                        IsReadOnly = (form) => form.IsNewEntry,
+                        IsReadOnly = (form) => {
+                            WindowManager wm = (WindowManager)Application.Current.MainWindow;
+
+                            string? id = form.GetFieldValue("ID")?.ToString();
+                            string? username = form.GetFieldValue("Username")?.ToString();
+
+                            return form.IsNewEntry || (
+                                id != null && (
+                                    wm.AuthorisedUser?.ID == int.Parse(id!) ||
+                                    (
+                                        username != null &&
+                                        username! == AuthenticationController.DEFAULT_ADMIN_USERNAME
+                                    )
+                                ));
+                        },
                         DataBinding = nameof(User.HasFirstLogin),
                         DefaultValue = (form) => !form.IsNewEntry,
                         HelpLabel = "Disabling this will enforce a self-service user password reset upon login."
@@ -287,6 +308,7 @@ namespace PMS.Context
                         new FormItemCombo<int> {
                             Label = "Question 1",
                             DataBinding = "ComputedSecurityQuestion1.SecurityQuestionID",
+                            HelpLabel = "Leave these fields blank to prompt the user on login.",
                             Options = SecurityQuestion.GetSecurityQuestionOptions(),
                         },
                         new FormItemText {

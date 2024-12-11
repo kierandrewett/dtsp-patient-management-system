@@ -323,6 +323,53 @@ namespace PMS.Context
                         }
                     ], null, Orientation.Vertical)
                 ]),
+                new FormItemText {
+                    Label = "Appointment Duration",
+                    IsReadOnly = (_) => true,
+                    Required = true,
+                    IsFieldValid = (field, form) => {
+                        string? startDt = form.GetFieldValue($"Start Date/Time")?.ToString();
+                        DateTime startDtParsed;
+
+                        string? endDt = form.GetFieldValue($"End Date/Time")?.ToString();
+                        DateTime endDtParsed;
+
+                        if (DateTime.TryParse(startDt, out startDtParsed) && DateTime.TryParse(endDt, out endDtParsed))
+                        {
+                            string? doctorID = form.GetFieldValue("Doctor")?.ToString();
+
+                            if (doctorID == null)
+                            {
+                                return "No doctor to look-up appointments for.";
+                            }
+
+                            string thisApptID = form.GetFieldValue("ID")?.ToString();
+
+                            Appointment[]? allDoctorAppointments = AppDatabase.QueryAll<Appointment>(
+                                "SELECT * FROM tblAppointment WHERE DoctorID=? AND NOT ID=?",
+                                [doctorID, thisApptID!]
+                            );
+
+                            foreach (Appointment appt in allDoctorAppointments)
+                            {
+                                string apptDateStartStr = $"{appt.DateScheduledStart.ToShortDateString()} {appt.TimeScheduledStart}";
+                                string apptDateEndStr = $"{appt.DateScheduledEnd.ToShortDateString()} {appt.TimeScheduledEnd}";
+
+                                DateTime apptDateStart = DateTime.Parse(apptDateStartStr);
+                                DateTime apptDateEnd = DateTime.Parse(apptDateEndStr);
+
+                                if ((startDtParsed < apptDateEnd) && (endDtParsed > apptDateStart))
+                                {
+                                    string msg = $"Appointment collides with another appointment between {apptDateStartStr} and {apptDateEndStr}.";
+
+                                    return msg;
+                                }
+                            }
+                        }
+
+                        return null;
+                    }
+                },
                 new FormItemGroup([
                     new FormItemGroup([
                         new FormItemCalendar {
@@ -391,53 +438,6 @@ namespace PMS.Context
                         ], "", Orientation.Vertical),
                     ], ""),
                 ]),
-                new FormItemText {
-                    Label = "Appointment Duration",
-                    IsReadOnly = (_) => true,
-                    Required = true,
-                    IsFieldValid = (field, form) => {
-                        string? startDt = form.GetFieldValue($"Start Date/Time")?.ToString();
-                        DateTime startDtParsed;
-
-                        string? endDt = form.GetFieldValue($"End Date/Time")?.ToString();
-                        DateTime endDtParsed;
-
-                        if (DateTime.TryParse(startDt, out startDtParsed) && DateTime.TryParse(endDt, out endDtParsed))
-                        {
-                            string? doctorID = form.GetFieldValue("Doctor")?.ToString();
-
-                            if (doctorID == null)
-                            {
-                                return "No doctor to look-up appointments for.";
-                            }
-
-                            string thisApptID = form.GetFieldValue("ID")?.ToString();
-
-                            Appointment[]? allDoctorAppointments = AppDatabase.QueryAll<Appointment>(
-                                "SELECT * FROM tblAppointment WHERE DoctorID=? AND NOT ID=?",
-                                [doctorID, thisApptID!]
-                            );
-
-                            foreach (Appointment appt in allDoctorAppointments)
-                            {
-                                string apptDateStartStr = $"{appt.DateScheduledStart.ToShortDateString()} {appt.TimeScheduledStart}";
-                                string apptDateEndStr = $"{appt.DateScheduledEnd.ToShortDateString()} {appt.TimeScheduledEnd}";
-
-                                DateTime apptDateStart = DateTime.Parse(apptDateStartStr);
-                                DateTime apptDateEnd = DateTime.Parse(apptDateEndStr);
-
-                                if ((startDtParsed < apptDateEnd) && (endDtParsed > apptDateStart))
-                                {
-                                    string msg = $"Appointment collides with another appointment between {apptDateStartStr} and {apptDateEndStr}.";
-
-                                    return msg;
-                                }
-                            }
-                        }
-
-                        return null;
-                    }
-                },
             ];
         }
     }
