@@ -10,13 +10,6 @@
     <Version>0.0.2.0</Version> 
     <InformationalVersion>$(Version)$(SourceRevisionId)</InformationalVersion> 
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="NewFolder\**" />
-    <EmbeddedResource Remove="NewFolder\**" />
-    <None Remove="NewFolder\**" />
-    <Page Remove="NewFolder\**" />
-  </ItemGroup>
   
   <ItemGroup>
     <Content Include="Static\icon.ico" />
@@ -29,16 +22,12 @@
   </ItemGroup>
   
   <ItemGroup>
-    <EditorConfigFiles Remove="C:\Users\Kieran\Nextcloud\Documents\PMS\.editorconfig" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <None Remove="PMS.accdb" />
     <None Remove="Static\icon.png" />
   </ItemGroup>
   
   <ItemGroup>
-    <ContentWithTargetPath Include="Static\database.accdb">
+    <ContentWithTargetPath Include="Static\blank_database.accdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>PMS.accdb</TargetPath>
     </ContentWithTargetPath>
@@ -46,29 +35,9 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Include="C:\Users\Kieran\Nextcloud\Documents\PMS\.editorconfig" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <None Update="Data\PMS.laccdb">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Components\NewFolder\" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Update="Dialogs\PMSPasswordChangeWindow - Copy.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Pages\WindowTabUnknown - Copy.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Pages\WindowTabUsers - Copy.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
 
 </Project>
